@@ -4,14 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coin Tower - 桁上がりマスター</title>
+
+    <!-- ★追加：アプリアイコンの設定（iOSおよび一般的なブラウザ用） -->
+    <link rel="apple-touch-icon" href="icon_2.png">
+    <link rel="icon" type="image/png" href="icon_2.png">
+
+    <!-- ★追加：Android向けに本物のアプリとして動かすためのマニフェスト読み込み -->
+    <!-- ※ manifest.json を作成した場合のみ有効になります -->
+    <link rel="manifest" href="manifest.json">
+
     <style>
-        /* ★追加：画面の縦幅に応じたサイズ変数を定義（ピクセルパーフェクトを維持） */
         :root {
-            /* PC・大きめのスマホ用 */
             --coin-size: 32px;
             --coin-margin: 2px;
-            --slot-size: 36px; /* 32 + 2*2 */
-            --tube-height: 360px; /* 36 * 10 */
+            --slot-size: 36px; 
+            --tube-height: 360px; 
             --tube-width: 50px;
             --hover-offset: 65px;
             --game-gap: 80px;
@@ -19,7 +26,6 @@
         }
 
         @media (max-height: 800px) {
-            /* 一般的なスマホ用 */
             :root {
                 --coin-size: 26px;
                 --coin-margin: 2px;
@@ -33,7 +39,6 @@
         }
 
         @media (max-height: 650px) {
-            /* 縦幅が狭いスマホ・横向き用 */
             :root {
                 --coin-size: 20px;
                 --coin-margin: 1px;
@@ -124,7 +129,7 @@
         #game-area {
             display: flex;
             justify-content: center;
-            gap: var(--game-gap); /* 変数で間隔を自動調整 */
+            gap: var(--game-gap); 
             margin-bottom: 15px;
             visibility: hidden;
         }
@@ -150,7 +155,6 @@
             width: var(--tube-width);
             height: var(--tube-height); 
             background-color: rgba(255, 255, 255, 0.6);
-            /* 変数を使って目盛りの間隔を完全同期 */
             background-image: repeating-linear-gradient(
                 to top,
                 transparent,
@@ -168,7 +172,6 @@
             position: relative;
         }
 
-        /* 5の目盛りも変数で位置を計算 */
         .tube::after {
             content: '';
             position: absolute;
@@ -247,7 +250,6 @@
             box-shadow: 0 0 0 #0056b3;
         }
 
-        /* 飛び込むアニメーションの距離も変数に同期 */
         @keyframes jumpIn {
             0% { transform: translate(var(--hover-offset), -30px) scale(1.1); opacity: 0.5; }
             100% { transform: translate(0, 0) scale(1); opacity: 1; }
@@ -393,7 +395,7 @@
             btn.className = 'num-btn';
             btn.textContent = val;
             if (val === 'クリア') {
-                btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; // スマホサイズに合わせて文字を可変に
+                btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; 
                 btn.style.backgroundColor = '#6c757d';
                 btn.style.boxShadow = '0 4px 0 #495057';
                 btn.onclick = () => { if(!isAnimating) resetInput(); };
