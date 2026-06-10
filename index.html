@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Tower - 桁上がりマスター</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            touch-action: manipulation; /* ダブルタップズーム防止 */
+        }
+
+        /* 上部の問題表示エリア */
+        #equation {
+            font-size: clamp(32px, 8vw, 48px);
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0 20px 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            padding: 10px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .cursor {
+            border-bottom: 4px solid #007bff;
+            width: 30px;
+            display: inline-block;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* タワー（チューブ）エリア */
+        #game-area {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tube-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tube-label {
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        /* チューブ本体：下から上にコインが積まれるように column-reverse を使用 */
+        .tube {
+            width: 70px;
+            height: 320px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 4px solid #b0bec5;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            padding-bottom: 5px;
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        /* 待機（ホバリング）エリア */
+        #hover-area {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            width: 70px;
+            height: 100px;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            animation: float 2s infinite ease-in-out;
+            z-index: 10;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* コインのデザイン */
+        .coin {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 22px;
+            margin-bottom: 2px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            z-index: 5;
+        }
+
+        /* 1円玉（シルバー） */
+        .coin-1 {
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
+            border: 2px solid #9e9e9e;
+            color: #424242;
+        }
+
+        /* 10円玉（ブロンズ） */
+        .coin-10 {
+            background: radial-gradient(circle at 30% 30%, #ffcc80, #d84315);
+            border: 2px solid #8d6e63;
+            color: #fff;
+        }
+
+        /* テンキーエリア */
+        #numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .num-btn {
+            height: 65px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 0 #0056b3;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .num-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #0056b3;
+        }
+
+        /* アニメーション用クラス */
+        .drop-in {
+            animation: dropAnim 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes dropAnim {
+            0% { transform: translateY(-200px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .glow-merge {
+            animation: mergeAnim 0.8s forwards;
+        }
+        @keyframes mergeAnim {
+            0% { box-shadow: 0 0 10px #ffeb3b; }
+            50% { box-shadow: 0 0 30px #ffeb3b; transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .shake {
+            animation: mildShake 0.4s ease-in-out;
+            background-color: #dc3545 !important;
+            box-shadow: 0 4px 0 #a71d2a !important;
+        }
+        @keyframes mildShake {
+            0%, 100% { transform: translateX(0); }
+            25%, 75% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+        }
+
+        /* 画面全体を覆う正解エフェクト */
+        #success-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,255,255,0) 70%);
+            opacity: 0;
+            z-index: 100;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="success-overlay"></div>
+
+    <div id="equation">
+        <span id="eq-x">8</span> + <span id="eq-y">4</span> = <span id="eq-ans"></span><span class="cursor" id="cursor"></span>
+    </div>
+
+    <div id="game-area">
+        <div class="tube-container">
+            <div class="tube-label">10の部屋</div>
+            <div id="tens-tube" class="tube"></div>
+        </div>
+        <div class="tube-container" style="position: relative;">
+            <div class="tube-label">1の部屋</div>
+            <div id="ones-tube" class="tube"></div>
+            <div id="hover-area"></div>
+        </div>
+    </div>
+
+    <div id="numpad"></div>
+
+    <script>
+        const eqX = document.getElementById('eq-x');
+        const eqY = document.getElementById('eq-y');
+        const eqAns = document.getElementById('eq-ans');
+        const cursor = document.getElementById('cursor');
+        const onesTube = document.getElementById('ones-tube');
+        const tensTube = document.getElementById('tens-tube');
+        const hoverArea = document.getElementById('hover-area');
+        const numpad = document.getElementById('numpad');
+        const overlay = document.getElementById('success-overlay');
+
+        let valX = 0;
+        let valY = 0;
+        let expectedAnswer = 0;
+        let currentInput = "";
+        let isAnimating = false;
+
+        // Web Audio API での簡易的な効果音生成（後で mp3 に差し替え可能です）
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(frequency, type, duration) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        // 初期化：テンキーの生成
+        function init() {
+            for (let i = 1; i <= 9; i++) {
+                createBtn(i);
+            }
+            createBtn(0);
+            createBtn('クリア');
+            startNextRound();
+        }
+
+        function createBtn(val) {
+            const btn = document.createElement('button');
+            btn.className = 'num-btn';
+            btn.textContent = val;
+            if (val === 'クリア') {
+                btn.style.fontSize = '20px';
+                btn.style.backgroundColor = '#6c757d';
+                btn.style.boxShadow = '0 4px 0 #495057';
+                btn.onclick = () => { if(!isAnimating) resetInput(); };
+            } else {
+                btn.onclick = () => handleInput(val, btn);
+            }
+            numpad.appendChild(btn);
+        }
+
+        // 桁上がりが確実に発生する問題を生成
+        function startNextRound() {
+            isAnimating = false;
+            currentInput = "";
+            eqAns.textContent = "";
+            cursor.style.display = "inline-block";
+            onesTube.innerHTML = "";
+            tensTube.innerHTML = "";
+            hoverArea.innerHTML = "";
+            overlay.style.opacity = "0";
+
+            // Xは6〜9、Yは(11-X)〜9 で、必ず答えが11〜18になるように設定
+            valX = Math.floor(Math.random() * 4) + 6; 
+            const minY = 11 - valX;
+            valY = Math.floor(Math.random() * (10 - minY)) + minY;
+            expectedAnswer = valX + valY;
+
+            eqX.textContent = valX;
+            eqY.textContent = valY;
+
+            // X枚の1円玉を配置
+            for(let i=0; i<valX; i++){
+                const coin = document.createElement('div');
+                coin.className = 'coin coin-1';
+                coin.textContent = '1';
+                onesTube.appendChild(coin);
+            }
+
+            // Y枚の1円玉を待機エリアに配置
+            for(let i=0; i<valY; i++){
+                const coin = document.createElement('div');
+                coin.className = 'coin coin-1';
+                coin.textContent = '1';
+                hoverArea.appendChild(coin);
+            }
+        }
+
+        function resetInput() {
+            currentInput = "";
+            eqAns.textContent = "";
+            cursor.style.display = "inline-block";
+        }
+
+        function handleInput(num, btnElement) {
+            if (isAnimating || currentInput.length >= 2) return;
+            
+            playBeep(800, 'sine', 0.1);
+            currentInput += num.toString();
+            eqAns.textContent = currentInput;
+
+            // 答えの桁数（今回は常に2桁）に達したら判定
+            if (currentInput.length === expectedAnswer.toString().length) {
+                cursor.style.display = "none";
+                if (parseInt(currentInput) === expectedAnswer) {
+                    processCorrectAnswer();
+                } else {
+                    processWrongAnswer(btnElement);
+                }
+            }
+        }
+
+        function processWrongAnswer(btnElement) {
+            playBeep(150, 'sawtooth', 0.3); // ブブー音
+            btnElement.classList.add('shake');
+            setTimeout(() => {
+                btnElement.classList.remove('shake');
+                resetInput();
+            }, 400);
+        }
+
+        // 正解時のご褒美アニメーション
+        function processCorrectAnswer() {
+            isAnimating = true;
+            playBeep(1200, 'sine', 0.1); setTimeout(() => playBeep(1600, 'sine', 0.2), 100); // ピロリン♪
+
+            // 1. 待機エリアのコインをチューブに落とす
+            hoverArea.innerHTML = "";
+            for(let i=0; i<valY; i++){
+                const coin = document.createElement('div');
+                coin.className = 'coin coin-1 drop-in';
+                coin.textContent = '1';
+                onesTube.appendChild(coin);
+            }
+
+            // 2. コインが落ち切るのを待つ (0.6秒)
+            setTimeout(() => {
+                // 3. 一の位のチューブ内にある下の10枚を圧縮
+                const allCoins = onesTube.querySelectorAll('.coin');
+                // column-reverseなので、配列の最初(0〜9)が下のコインになります
+                for(let i=0; i<10; i++){
+                    allCoins[i].classList.add('glow-merge');
+                }
+                
+                playBeep(2000, 'square', 0.3); // ギュイーン（圧縮音）
+
+                // 4. 圧縮完了と同時に10円玉を生成し、一の位から10枚消す (0.8秒後)
+                setTimeout(() => {
+                    for(let i=0; i<10; i++){
+                        onesTube.removeChild(allCoins[i]);
+                    }
+
+                    // 10円玉を落とす
+                    const tenCoin = document.createElement('div');
+                    tenCoin.className = 'coin coin-10 drop-in';
+                    tenCoin.textContent = '10';
+                    tensTube.appendChild(tenCoin);
+
+                    // 大正解のファンファーレとエフェクト
+                    overlay.style.opacity = "1";
+                    playBeep(523.25, 'sine', 0.1); // C
+                    setTimeout(() => playBeep(659.25, 'sine', 0.1), 100); // E
+                    setTimeout(() => playBeep(783.99, 'sine', 0.3), 200); // G
+
+                    // 次の問題へ
+                    setTimeout(() => {
+                        startNextRound();
+                    }, 2000);
+
+                }, 800);
+
+            }, 600);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
