@@ -23,34 +23,23 @@
 
         @media (max-height: 800px) {
             :root {
-                --coin-size: 26px;
-                --coin-margin: 2px;
-                --slot-size: 30px;
-                --tube-height: 300px;
-                --tube-width: 40px;
-                --hover-offset: 50px;
-                --game-gap: 60px;
-                --btn-height: 45px;
+                --coin-size: 26px; --coin-margin: 2px; --slot-size: 30px;
+                --tube-height: 300px; --tube-width: 40px; --hover-offset: 50px;
+                --game-gap: 60px; --btn-height: 45px;
             }
         }
 
         @media (max-height: 650px) {
             :root {
-                --coin-size: 20px;
-                --coin-margin: 1px;
-                --slot-size: 22px;
-                --tube-height: 220px;
-                --tube-width: 32px;
-                --hover-offset: 40px;
-                --game-gap: 50px;
-                --btn-height: 40px;
+                --coin-size: 20px; --coin-margin: 1px; --slot-size: 22px;
+                --tube-height: 220px; --tube-width: 32px; --hover-offset: 40px;
+                --game-gap: 50px; --btn-height: 40px;
             }
         }
 
         body {
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
-            background-color: #f0f4f8;
-            margin: 0; padding: 10px;
+            background-color: #f0f4f8; margin: 0; padding: 10px;
             display: flex; flex-direction: column; align-items: center;
             overflow: hidden; touch-action: manipulation;
         }
@@ -58,8 +47,7 @@
         #level-select-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(240, 244, 248, 0.95);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
         }
         .level-title { font-size: 36px; font-weight: bold; color: #333; margin-bottom: 40px; }
         .level-btn {
@@ -73,13 +61,9 @@
         #equation {
             font-size: clamp(24px, 7vw, 40px); font-weight: bold; color: #333;
             margin: 5px 0 15px 0; height: 50px; display: flex; align-items: center; justify-content: center;
-            background: #fff; padding: 5px 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: relative;
+            background: #fff; padding: 5px 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
         }
-        .cursor {
-            border-bottom: 4px solid #007bff; width: 20px; display: inline-block;
-            margin-left: 5px; animation: blink 1s infinite;
-        }
+        .cursor { border-bottom: 4px solid #007bff; width: 20px; display: inline-block; margin-left: 5px; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
         #game-area {
@@ -91,20 +75,12 @@
         .tube-wrapper { position: relative; }
 
         .tube {
-            width: var(--tube-width); height: var(--tube-height); 
-            background-color: rgba(255, 255, 255, 0.6);
-            background-image: repeating-linear-gradient(
-                to top, transparent, transparent calc(var(--slot-size) - 1px),
-                rgba(0, 0, 0, 0.15) calc(var(--slot-size) - 1px), rgba(0, 0, 0, 0.15) var(--slot-size)
-            );
+            width: var(--tube-width); height: var(--tube-height); background-color: rgba(255, 255, 255, 0.6);
+            background-image: repeating-linear-gradient(to top, transparent, transparent calc(var(--slot-size) - 1px), rgba(0, 0, 0, 0.15) calc(var(--slot-size) - 1px), rgba(0, 0, 0, 0.15) var(--slot-size));
             border: 4px solid #b0bec5; border-top: none; border-radius: 0 0 15px 15px;
-            display: flex; flex-direction: column-reverse; align-items: center;
-            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05); position: relative;
+            display: flex; flex-direction: column-reverse; align-items: center; box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05); position: relative;
         }
-        .tube::after {
-            content: ''; position: absolute; bottom: calc(var(--slot-size) * 5 - 1px); 
-            left: 0; width: 100%; height: 2px; background-color: rgba(0, 0, 0, 0.2); z-index: 1;
-        }
+        .tube::after { content: ''; position: absolute; bottom: calc(var(--slot-size) * 5 - 1px); left: 0; width: 100%; height: 2px; background-color: rgba(0, 0, 0, 0.2); z-index: 1; }
 
         .hover-area {
             position: absolute; top: 0; left: var(--hover-offset); 
@@ -112,34 +88,34 @@
             display: flex; flex-direction: column; align-items: center; z-index: 10;
         }
 
+        /* スワイプを促すための微細なアニメーション */
+        @keyframes hintSwipe { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-8px); } }
+        .hint-swipe { animation: hintSwipe 1.5s infinite ease-in-out; cursor: pointer; }
+
         .coin {
             width: var(--coin-size); height: var(--coin-size); border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; font-size: calc(var(--coin-size) * 0.55);
-            margin: var(--coin-margin) 0; box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-            z-index: 5; box-sizing: border-box;
-            transform-style: preserve-3d;
+            margin: var(--coin-margin) 0; box-shadow: 0 3px 5px rgba(0,0,0,0.2); z-index: 5; box-sizing: border-box; transform-style: preserve-3d;
         }
         .coin-1 { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border: 2px solid #9e9e9e; color: #424242; }
         .coin-10 { background: radial-gradient(circle at 30% 30%, #ffcc80, #d84315); border: 2px solid #8d6e63; color: #fff; }
 
         #numpad {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-            width: 100%; max-width: 320px; visibility: hidden;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 320px; visibility: hidden;
+            transition: opacity 0.3s;
         }
+        /* フェーズ1ではテンキーを半透明にして無効化 */
+        .numpad-disabled { opacity: 0.3; pointer-events: none; }
+
         .num-btn {
             height: var(--btn-height); font-size: calc(var(--btn-height) * 0.5); font-weight: bold;
-            color: #fff; background-color: #007bff; border: none; border-radius: 12px;
-            box-shadow: 0 4px 0 #0056b3; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+            color: #fff; background-color: #007bff; border: none; border-radius: 12px; box-shadow: 0 4px 0 #0056b3; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
         }
         .num-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #0056b3; }
 
         .glow-merge { animation: mergeAnim 0.7s forwards; }
-        @keyframes mergeAnim {
-            0% { box-shadow: 0 0 10px #ffeb3b; }
-            40% { box-shadow: 0 0 30px #ffeb3b; transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(0); opacity: 0; }
-        }
+        @keyframes mergeAnim { 0% { box-shadow: 0 0 10px #ffeb3b; } 40% { box-shadow: 0 0 30px #ffeb3b; transform: scale(1.1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
         .shake { animation: mildShake 0.4s ease-in-out; background-color: #dc3545 !important; box-shadow: 0 4px 0 #a71d2a !important; }
         @keyframes mildShake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
 
@@ -192,7 +168,13 @@
         const eqX = document.getElementById('eq-x'), eqY = document.getElementById('eq-y'), eqAns = document.getElementById('eq-ans'), cursor = document.getElementById('cursor');
         const onesTube = document.getElementById('ones-tube'), tensTube = document.getElementById('tens-tube'), onesHoverArea = document.getElementById('ones-hover-area'), tensHoverArea = document.getElementById('tens-hover-area'), overlay = document.getElementById('success-overlay');
 
-        let currentLevel = 1, valX = 0, valY = 0, valX_ones = 0, valX_tens = 0, valY_ones = 0, valY_tens = 0, expectedAnswer = 0, currentInput = "", isAnimating = false;
+        let currentLevel = 1, valX = 0, valY = 0, valX_ones = 0, valX_tens = 0, valY_ones = 0, valY_tens = 0, expectedAnswer = 0, currentInput = "";
+        let isAnimating = false;
+        
+        // ★新規追加：スワイプフェーズの管理変数
+        let neededFor10 = 0;
+        let swipedCount = 0;
+        let isPhase1 = true;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBeep(frequency, type, duration) {
@@ -211,6 +193,7 @@
         function init() {
             for (let i = 1; i <= 9; i++) createBtn(i);
             createBtn(0); createBtn('クリア');
+            setupSwipeEvents();
         }
 
         function createBtn(val) {
@@ -218,7 +201,7 @@
             btn.className = 'num-btn'; btn.textContent = val;
             if (val === 'クリア') {
                 btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; btn.style.backgroundColor = '#6c757d'; btn.style.boxShadow = '0 4px 0 #495057';
-                btn.onclick = () => { if(!isAnimating) resetInput(); };
+                btn.onclick = () => { if(!isAnimating && !isPhase1) resetInput(); };
             } else btn.onclick = () => handleInput(val, btn);
             numpad.appendChild(btn);
         }
@@ -239,9 +222,13 @@
         }
 
         function startNextRound() {
-            isAnimating = false; resetInput();
+            isAnimating = false; isPhase1 = true; resetInput();
             onesTube.innerHTML = ""; tensTube.innerHTML = ""; onesHoverArea.innerHTML = ""; tensHoverArea.innerHTML = ""; overlay.style.opacity = "0";
-            eqAns.style.opacity = "1"; // ハイライト演出で消えるためリセット
+            eqAns.style.opacity = "1";
+            
+            // ホバリングエリアの設定をリセット（上詰めで配置）
+            onesHoverArea.style.flexDirection = 'column';
+            tensHoverArea.style.flexDirection = 'column';
 
             valX_ones = Math.floor(Math.random() * 4) + 6; 
             const minY = 11 - valX_ones;
@@ -257,12 +244,135 @@
             for(let i=0; i<valX_ones; i++) onesTube.appendChild(createCoin(1));
             for(let i=0; i<valY_tens; i++) tensHoverArea.appendChild(createCoin(10));
             for(let i=0; i<valY_ones; i++) onesHoverArea.appendChild(createCoin(1));
+
+            // ★フェーズ1の初期設定：テンキーを無効化し、スワイプを促すアニメーションを追加
+            neededFor10 = 10 - valX_ones;
+            swipedCount = 0;
+            numpad.classList.add('numpad-disabled');
+            onesHoverArea.classList.add('hint-swipe');
+        }
+
+        // ★スワイプ＆タップのイベントリスナー設定
+        function setupSwipeEvents() {
+            let touchStartX = 0;
+            
+            // スワイプ開始位置を記録
+            onesHoverArea.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, {passive: true});
+
+            // スワイプ終了位置で判定（左に30px以上動かした場合）
+            onesHoverArea.addEventListener('touchend', e => {
+                if (!isPhase1 || isAnimating || swipedCount >= neededFor10) return;
+                const touchEndX = e.changedTouches[0].screenX;
+                if (touchStartX - touchEndX > 30) {
+                    executeSwipeCoin();
+                }
+            });
+
+            // PCテスト用：クリック（タップ）でも移動できるようにする
+            onesHoverArea.addEventListener('click', () => {
+                if (!isPhase1 || isAnimating || swipedCount >= neededFor10) return;
+                executeSwipeCoin();
+            });
+        }
+
+        // ★手動スワイプ時のコイン移動ロジック
+        async function executeSwipeCoin() {
+            isAnimating = true;
+            onesHoverArea.classList.remove('hint-swipe'); // ヒントアニメーションを消す
+
+            // 一番上のコインを取得（スペーサーがある場合はそれを飛ばす）
+            // 実際には子要素の配列のうち、swipedCountの数だけスペーサーがあるので、[swipedCount]番目が実体のトップコイン
+            const coinIndex = swipedCount; 
+            const coin = onesHoverArea.children[coinIndex];
+            
+            if (coin) {
+                // 透明なスペーサーを置いて、下のコインがズレないようにする
+                const spacer = document.createElement('div');
+                spacer.className = 'coin spacer';
+                spacer.style.visibility = 'hidden';
+                onesHoverArea.insertBefore(spacer, coin);
+
+                const firstRect = coin.getBoundingClientRect();
+                onesTube.appendChild(coin);
+                const lastRect = coin.getBoundingClientRect();
+
+                coin.animate([
+                    { transform: `translate(${firstRect.left - lastRect.left}px, ${firstRect.top - lastRect.top}px) scale(1.1)`, opacity: 0.5 },
+                    { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }
+                ], { duration: 200, easing: 'ease-out' });
+
+                playBeep(1200 + swipedCount * 100, 'sine', 0.05);
+                
+                swipedCount++;
+                await sleep(200);
+            }
+
+            isAnimating = false;
+
+            // 10個揃ったら、フェーズ2（落下＆テンキー有効化）へ移行
+            if (swipedCount === neededFor10) {
+                transitionToPhase2();
+            }
+        }
+
+        // ★フェーズ2：残りのコインがブロックになって落ち、解答待ちになる
+        async function transitionToPhase2() {
+            isPhase1 = false;
+            isAnimating = true;
+            await sleep(200);
+
+            const remainingOnes = valY_ones - neededFor10;
+
+            if (remainingOnes > 0) {
+                // スペーサーを全て削除し、flex方向を反転させることで、コインを下にスナップ（落下）させる
+                const spacers = onesHoverArea.querySelectorAll('.spacer');
+                spacers.forEach(s => s.remove());
+                
+                const coinsToDrop = Array.from(onesHoverArea.children);
+                const firstRects = coinsToDrop.map(c => c.getBoundingClientRect());
+                
+                onesHoverArea.style.flexDirection = 'column-reverse'; // これで下にブロック化される
+                const lastRects = coinsToDrop.map(c => c.getBoundingClientRect());
+
+                coinsToDrop.forEach((coin, i) => {
+                    coin.animate([
+                        { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
+                        { transform: `translate(0px, 0px)` }
+                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
+                });
+
+                setTimeout(() => playBeep(200, 'square', 0.1), 350);
+            }
+
+            // レベル2の場合、10のコインも下に落とす
+            if (currentLevel === 2 && valY_tens > 0) {
+                const tensToDrop = Array.from(tensHoverArea.children);
+                const firstRects = tensToDrop.map(c => c.getBoundingClientRect());
+                
+                tensHoverArea.style.flexDirection = 'column-reverse';
+                const lastRects = tensToDrop.map(c => c.getBoundingClientRect());
+
+                tensToDrop.forEach((coin, i) => {
+                    coin.animate([
+                        { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
+                        { transform: `translate(0px, 0px)` }
+                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
+                });
+            }
+
+            await sleep(400);
+
+            // テンキーを有効化し、解答を促す
+            numpad.classList.remove('numpad-disabled');
+            isAnimating = false;
         }
 
         function resetInput() { currentInput = ""; eqAns.textContent = ""; cursor.style.display = "inline-block"; }
 
         function handleInput(num, btnElement) {
-            if (isAnimating || currentInput.length >= expectedAnswer.toString().length) return;
+            if (isAnimating || isPhase1 || currentInput.length >= expectedAnswer.toString().length) return;
             playBeep(800, 'sine', 0.1); currentInput += num.toString(); eqAns.textContent = currentInput;
             if (currentInput.length === expectedAnswer.toString().length) {
                 cursor.style.display = "none";
@@ -295,54 +405,33 @@
             }
         }
 
-        // ★新規追加：計算式の解を中央に飛ばして目立たせる演出
         async function animateEquationAnswer() {
             const rect = eqAns.getBoundingClientRect();
-            
-            // 飛んでいく用のダミーを作成
             const popText = document.createElement('div');
             popText.textContent = expectedAnswer;
-            popText.style.position = 'fixed';
-            popText.style.left = `${rect.left + rect.width / 2}px`;
-            popText.style.top = `${rect.top + rect.height / 2}px`;
-            popText.style.transform = `translate(-50%, -50%) scale(1)`;
-            popText.style.fontSize = window.getComputedStyle(eqAns).fontSize;
-            popText.style.fontWeight = 'bold';
-            popText.style.color = '#333';
-            popText.style.zIndex = '3000';
-            popText.style.pointerEvents = 'none';
+            popText.style.position = 'fixed'; popText.style.left = `${rect.left + rect.width / 2}px`; popText.style.top = `${rect.top + rect.height / 2}px`;
+            popText.style.transform = `translate(-50%, -50%) scale(1)`; popText.style.fontSize = window.getComputedStyle(eqAns).fontSize;
+            popText.style.fontWeight = 'bold'; popText.style.color = '#333'; popText.style.zIndex = '3000'; popText.style.pointerEvents = 'none';
             document.body.appendChild(popText);
 
-            // 元の文字を透明にする
             eqAns.style.opacity = '0';
+            const centerX = window.innerWidth / 2; const centerY = window.innerHeight / 2;
 
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-
-            // 1. 中央へ飛んでいきながら巨大化
             const flyIn = popText.animate([
                 { left: `${rect.left + rect.width / 2}px`, top: `${rect.top + rect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333' },
                 { left: `${centerX}px`, top: `${centerY}px`, transform: `translate(-50%, -50%) scale(5)`, color: '#e60012', textShadow: '0 0 20px #ffeb3b, 0 0 40px #ff9800' }
             ], { duration: 600, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards' });
 
             playBeep(880, 'sine', 0.1); setTimeout(() => playBeep(1108.73, 'sine', 0.1), 100); setTimeout(() => playBeep(1318.51, 'sine', 0.3), 200);
-            
             await flyIn.finished;
 
-            // 2. 中央でパルス（鼓動）＆星を散らす
             spawnStars(centerX, centerY);
-            
             const pulse = popText.animate([
-                { transform: `translate(-50%, -50%) scale(5)` },
-                { transform: `translate(-50%, -50%) scale(5.5)` },
-                { transform: `translate(-50%, -50%) scale(5)` }
+                { transform: `translate(-50%, -50%) scale(5)` }, { transform: `translate(-50%, -50%) scale(5.5)` }, { transform: `translate(-50%, -50%) scale(5)` }
             ], { duration: 500, iterations: 2, easing: 'ease-in-out' });
-            
-            await pulse.finished;
-            await sleep(300);
+            await pulse.finished; await sleep(300);
 
-            // 3. 元の位置へ戻りながら元のサイズに
-            const newRect = eqAns.getBoundingClientRect(); // リサイズ対策で再取得
+            const newRect = eqAns.getBoundingClientRect(); 
             playBeep(1318.51, 'sine', 0.1); setTimeout(() => playBeep(880, 'sine', 0.1), 100);
 
             const flyOut = popText.animate([
@@ -350,63 +439,15 @@
                 { left: `${newRect.left + newRect.width / 2}px`, top: `${newRect.top + newRect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333', textShadow: 'none' }
             ], { duration: 500, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
             
-            await flyOut.finished;
-
-            // ダミーを消して元の文字を再表示
-            popText.remove();
-            eqAns.style.opacity = '1';
+            await flyOut.finished; popText.remove(); eqAns.style.opacity = '1';
         }
 
+        // ★フェーズ3：正解後のフィナーレ（残りのコインの移動など）
         async function processCorrectAnswer() {
             isAnimating = true; 
             playBeep(1200, 'sine', 0.1); setTimeout(() => playBeep(1600, 'sine', 0.2), 100); 
 
-            const neededFor10 = 10 - valX_ones;
-            const remainingOnes = valY_ones - neededFor10;
-
-            const coinsToMove = [];
-            for(let i=0; i<neededFor10; i++) {
-                coinsToMove.push(onesHoverArea.children[i]);
-            }
-
-            coinsToMove.forEach(coin => {
-                const spacer = document.createElement('div');
-                spacer.className = 'coin spacer';
-                spacer.style.visibility = 'hidden';
-                onesHoverArea.insertBefore(spacer, coin);
-            });
-
-            const firstRects = coinsToMove.map(coin => coin.getBoundingClientRect());
-
-            for(let i = neededFor10 - 1; i >= 0; i--) {
-                onesTube.appendChild(coinsToMove[i]);
-            }
-
-            const lastRects = coinsToMove.map(coin => coin.getBoundingClientRect());
-
-            coinsToMove.forEach((coin, i) => {
-                coin.style.transform = `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)`;
-            });
-
-            void onesTube.offsetWidth; 
-
-            for(let i=0; i<neededFor10; i++) {
-                const coin = coinsToMove[i];
-                const deltaX = firstRects[i].left - lastRects[i].left;
-                const deltaY = firstRects[i].top - lastRects[i].top; 
-
-                coin.animate([
-                    { transform: `translate(${deltaX}px, ${deltaY}px) scale(1.1)`, opacity: 0.5 },
-                    { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }
-                ], { duration: 300, easing: 'ease-in-out' });
-                
-                playBeep(1200 + i * 100, 'sine', 0.05);
-                await sleep(300); 
-                coin.style.transform = 'translate(0px, 0px)'; 
-            }
-
-            await sleep(200);
-
+            // 1の部屋のコインが合体して光る
             const onesCoins = Array.from(onesTube.querySelectorAll('.coin'));
             onesCoins.forEach(c => c.classList.add('glow-merge'));
             await sleep(700); 
@@ -424,7 +465,6 @@
 
             playBeep(440, 'sine', 0.1); setTimeout(() => playBeep(554.37, 'sine', 0.1), 100);
             setTimeout(() => playBeep(659.25, 'sine', 0.1), 200); setTimeout(() => playBeep(880, 'sine', 0.3), 300);
-            
             setTimeout(() => spawnStars(startRect.left + 20, startRect.top - 150), 600);
 
             const evolveAnim = celebCoin.animate([
@@ -439,33 +479,20 @@
             tensTube.appendChild(createCoin(10));
             await sleep(300);
 
+            // 残りのコイン（ブロック状態）を1つずつ横へスライド
+            const remainingOnes = valY_ones - neededFor10;
             if (remainingOnes > 0) {
-                const moveData = [];
-                const coinsToDrop = Array.from(onesHoverArea.querySelectorAll('.coin:not(.spacer)')).reverse();
+                // column-reverseになっているので、上にあるコイン（DOM的には末尾）から取る
+                const coinsToMove = Array.from(onesHoverArea.children).reverse();
                 
-                for(let i=0; i<coinsToDrop.length; i++) {
-                    const coin = coinsToDrop[i];
+                for (let i = 0; i < coinsToMove.length; i++) {
+                    const coin = coinsToMove[i];
                     const firstRect = coin.getBoundingClientRect();
                     onesTube.appendChild(coin);
                     const lastRect = coin.getBoundingClientRect();
-                    moveData.push({ coin: coin, deltaX: firstRect.left - lastRect.left, deltaY: firstRect.top - lastRect.top });
-                }
 
-                moveData.forEach(({ coin, deltaX, deltaY }) => {
                     coin.animate([
-                        { transform: `translate(${deltaX}px, ${deltaY}px)` },
-                        { transform: `translate(${deltaX}px, 0px)` }
-                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
-                });
-                
-                setTimeout(() => playBeep(200, 'square', 0.1), 350);
-                await sleep(400);
-                await sleep(400); 
-
-                for (let i = 0; i < moveData.length; i++) {
-                    const { coin, deltaX } = moveData[i];
-                    coin.animate([
-                        { transform: `translate(${deltaX}px, 0px)` },
+                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px)` },
                         { transform: `translate(0px, 0px)` }
                     ], { duration: 250, easing: 'ease-out', fill: 'forwards' });
                     
@@ -475,32 +502,17 @@
                 await sleep(300);
             }
 
+            // 10のホバリングコインの移動（レベル2のみ）
             if (currentLevel === 2 && tensHoverArea.children.length > 0) {
-                const moveDataTens = [];
                 const tenHoverCoins = Array.from(tensHoverArea.children).reverse();
-                for(let i=0; i<tenHoverCoins.length; i++) {
+                for (let i = 0; i < tenHoverCoins.length; i++) {
                     const coin = tenHoverCoins[i];
                     const firstRect = coin.getBoundingClientRect();
                     tensTube.appendChild(coin);
                     const lastRect = coin.getBoundingClientRect();
-                    moveDataTens.push({ coin: coin, deltaX: firstRect.left - lastRect.left, deltaY: firstRect.top - lastRect.top });
-                }
 
-                moveDataTens.forEach(({ coin, deltaX, deltaY }) => {
                     coin.animate([
-                        { transform: `translate(${deltaX}px, ${deltaY}px)` },
-                        { transform: `translate(${deltaX}px, 0px)` }
-                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
-                });
-                
-                setTimeout(() => playBeep(150, 'square', 0.1), 350);
-                await sleep(400);
-                await sleep(300);
-
-                for (let i = 0; i < moveDataTens.length; i++) {
-                    const { coin, deltaX } = moveDataTens[i];
-                    coin.animate([
-                        { transform: `translate(${deltaX}px, 0px)` },
+                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px)` },
                         { transform: `translate(0px, 0px)` }
                     ], { duration: 250, easing: 'ease-out', fill: 'forwards' });
                     
@@ -509,7 +521,7 @@
                 }
             }
 
-            // 【ステップ5】フィナーレ演出（解のポップアップ）
+            // フィナーレ演出
             overlay.style.opacity = "1";
             await animateEquationAnswer();
             await sleep(500); 
