@@ -5,6 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coin Tower - 桁上がりマスター</title>
     <style>
+        /* ★追加：画面の縦幅に応じたサイズ変数を定義（ピクセルパーフェクトを維持） */
+        :root {
+            /* PC・大きめのスマホ用 */
+            --coin-size: 32px;
+            --coin-margin: 2px;
+            --slot-size: 36px; /* 32 + 2*2 */
+            --tube-height: 360px; /* 36 * 10 */
+            --tube-width: 50px;
+            --hover-offset: 65px;
+            --game-gap: 80px;
+            --btn-height: 55px;
+        }
+
+        @media (max-height: 800px) {
+            /* 一般的なスマホ用 */
+            :root {
+                --coin-size: 26px;
+                --coin-margin: 2px;
+                --slot-size: 30px;
+                --tube-height: 300px;
+                --tube-width: 40px;
+                --hover-offset: 50px;
+                --game-gap: 60px;
+                --btn-height: 45px;
+            }
+        }
+
+        @media (max-height: 650px) {
+            /* 縦幅が狭いスマホ・横向き用 */
+            :root {
+                --coin-size: 20px;
+                --coin-margin: 1px;
+                --slot-size: 22px;
+                --tube-height: 220px;
+                --tube-width: 32px;
+                --hover-offset: 40px;
+                --game-gap: 50px;
+                --btn-height: 40px;
+            }
+        }
+
         body {
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
             background-color: #f0f4f8;
@@ -17,7 +58,6 @@
             touch-action: manipulation;
         }
 
-        /* --- レベル選択画面 --- */
         #level-select-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -56,42 +96,37 @@
             background-color: #28a745;
             box-shadow: 0 6px 0 #1e7e34;
         }
-        .level-btn.lvl2:active {
-            box-shadow: 0 0 0 #1e7e34;
-        }
 
-        /* --- ゲーム画面 --- */
         #equation {
-            font-size: clamp(32px, 8vw, 48px);
+            font-size: clamp(24px, 7vw, 40px);
             font-weight: bold;
             color: #333;
-            margin: 10px 0 20px 0;
-            height: 60px;
+            margin: 5px 0 15px 0;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #fff;
-            padding: 10px 30px;
+            padding: 5px 25px;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .cursor {
             border-bottom: 4px solid #007bff;
-            width: 30px;
+            width: 20px;
             display: inline-block;
             margin-left: 5px;
             animation: blink 1s infinite;
         }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* 10の部屋と1の部屋の間隔を調整 */
         #game-area {
             display: flex;
             justify-content: center;
-            gap: 75px; /* ホバリングエリアが入るため間隔を広めに */
-            margin-bottom: 30px;
-            visibility: hidden; /* レベル選択までは隠す */
+            gap: var(--game-gap); /* 変数で間隔を自動調整 */
+            margin-bottom: 15px;
+            visibility: hidden;
         }
 
         .tube-container {
@@ -101,10 +136,10 @@
         }
 
         .tube-label {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #555;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .tube-wrapper {
@@ -112,15 +147,16 @@
         }
 
         .tube {
-            width: 60px;
-            height: 440px; 
+            width: var(--tube-width);
+            height: var(--tube-height); 
             background-color: rgba(255, 255, 255, 0.6);
+            /* 変数を使って目盛りの間隔を完全同期 */
             background-image: repeating-linear-gradient(
                 to top,
                 transparent,
-                transparent 43px,
-                rgba(0, 0, 0, 0.15) 43px,
-                rgba(0, 0, 0, 0.15) 44px
+                transparent calc(var(--slot-size) - 1px),
+                rgba(0, 0, 0, 0.15) calc(var(--slot-size) - 1px),
+                rgba(0, 0, 0, 0.15) var(--slot-size)
             );
             border: 4px solid #b0bec5;
             border-top: none;
@@ -132,10 +168,11 @@
             position: relative;
         }
 
+        /* 5の目盛りも変数で位置を計算 */
         .tube::after {
             content: '';
             position: absolute;
-            bottom: 219px; 
+            bottom: calc(var(--slot-size) * 5 - 1px); 
             left: 0;
             width: 100%;
             height: 2px;
@@ -143,13 +180,12 @@
             z-index: 1;
         }
 
-        /* 共通のホバリングスタイル。各チューブの右側に配置される */
         .hover-area {
             position: absolute;
             top: 0; 
-            left: 80px; 
-            width: 60px;
-            height: 440px; 
+            left: var(--hover-offset); 
+            width: var(--tube-width);
+            height: var(--tube-height); 
             display: flex;
             flex-direction: column; 
             align-items: center;
@@ -157,15 +193,15 @@
         }
 
         .coin {
-            width: 40px;
-            height: 40px;
+            width: var(--coin-size);
+            height: var(--coin-size);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            font-size: 20px;
-            margin: 2px 0; 
+            font-size: calc(var(--coin-size) * 0.55);
+            margin: var(--coin-margin) 0; 
             box-shadow: 0 3px 5px rgba(0,0,0,0.2);
             z-index: 5;
             box-sizing: border-box;
@@ -187,15 +223,15 @@
         #numpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 10px;
             width: 100%;
             max-width: 320px;
             visibility: hidden;
         }
 
         .num-btn {
-            height: 65px;
-            font-size: 32px;
+            height: var(--btn-height);
+            font-size: calc(var(--btn-height) * 0.5);
             font-weight: bold;
             color: #fff;
             background-color: #007bff;
@@ -211,14 +247,14 @@
             box-shadow: 0 0 0 #0056b3;
         }
 
-        /* --- アニメーション --- */
+        /* 飛び込むアニメーションの距離も変数に同期 */
         @keyframes jumpIn {
-            0% { transform: translate(60px, -40px) scale(1.1); opacity: 0.5; }
+            0% { transform: translate(var(--hover-offset), -30px) scale(1.1); opacity: 0.5; }
             100% { transform: translate(0, 0) scale(1); opacity: 1; }
         }
 
         @keyframes dropTen {
-            0% { transform: translateY(-150px); opacity: 0; }
+            0% { transform: translateY(-100px); opacity: 0; }
             80% { transform: translateY(10px); opacity: 1; }
             100% { transform: translateY(0); opacity: 1; }
         }
@@ -253,7 +289,6 @@
             transition: opacity 0.3s;
         }
         
-        /* レベル選択に戻るボタン */
         #back-btn {
             position: absolute;
             top: 10px;
@@ -280,7 +315,6 @@
     </div>
 
     <button id="back-btn" onclick="showLevelSelect()">◀ もどる</button>
-
     <div id="success-overlay"></div>
 
     <div id="equation">
@@ -324,8 +358,7 @@
         const overlay = document.getElementById('success-overlay');
 
         let currentLevel = 1;
-        let valX = 0;
-        let valY = 0;
+        let valX = 0, valY = 0;
         let valX_ones = 0, valX_tens = 0;
         let valY_ones = 0, valY_tens = 0;
         let expectedAnswer = 0;
@@ -360,7 +393,7 @@
             btn.className = 'num-btn';
             btn.textContent = val;
             if (val === 'クリア') {
-                btn.style.fontSize = '20px';
+                btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; // スマホサイズに合わせて文字を可変に
                 btn.style.backgroundColor = '#6c757d';
                 btn.style.boxShadow = '0 4px 0 #495057';
                 btn.onclick = () => { if(!isAnimating) resetInput(); };
@@ -392,9 +425,7 @@
             numpad.style.visibility = 'visible';
             backBtn.style.visibility = 'visible';
             
-            // レベル1の場合は、10のホバリングエリアを隠す
             tensHoverArea.style.display = currentLevel === 1 ? 'none' : 'flex';
-            
             startNextRound();
         }
 
@@ -408,19 +439,16 @@
             overlay.style.opacity = "0";
 
             if (currentLevel === 1) {
-                // レベル1：1桁＋1桁（必ず繰り上がる）
-                valX_ones = Math.floor(Math.random() * 4) + 6; // 6~9
+                valX_ones = Math.floor(Math.random() * 4) + 6; 
                 const minY = 11 - valX_ones;
                 valY_ones = Math.floor(Math.random() * (10 - minY)) + minY;
                 valX_tens = 0; valY_tens = 0;
             } else {
-                // レベル2：2桁＋2桁（1の位は必ず繰り上がり、和が99以下になるように制御）
                 valX_ones = Math.floor(Math.random() * 4) + 6; 
                 const minY = 11 - valX_ones;
                 valY_ones = Math.floor(Math.random() * (10 - minY)) + minY;
                 
-                // 10の位の合計が8以下になるようにする（繰り上がりの1を足して9以下に収めるため）
-                valX_tens = Math.floor(Math.random() * 4) + 1; // 1~4
+                valX_tens = Math.floor(Math.random() * 4) + 1; 
                 valY_tens = Math.floor(Math.random() * (8 - valX_tens)) + 1; 
             }
 
@@ -431,11 +459,9 @@
             eqX.textContent = valX;
             eqY.textContent = valY;
 
-            // Xのコインを各部屋に配置
             for(let i=0; i<valX_tens; i++) tensTube.appendChild(createCoin(10));
             for(let i=0; i<valX_ones; i++) onesTube.appendChild(createCoin(1));
 
-            // Yのコインを各ホバリングエリアに配置
             for(let i=0; i<valY_tens; i++) tensHoverArea.appendChild(createCoin(10));
             for(let i=0; i<valY_ones; i++) onesHoverArea.appendChild(createCoin(1));
         }
@@ -480,7 +506,6 @@
             const neededFor10 = 10 - valX_ones;
             const remainingOnes = valY_ones - neededFor10;
 
-            // 【ステップ1】1の位：10の補数分だけ移動
             for(let i=0; i<neededFor10; i++) {
                 const coin = onesHoverArea.lastElementChild;
                 if(coin) {
@@ -494,7 +519,6 @@
 
             await sleep(200);
 
-            // 【ステップ2】1の位：10個が合体して、10の位へ繰り上がり移動
             const onesCoins = Array.from(onesTube.querySelectorAll('.coin'));
             playBeep(2000, 'square', 0.4); 
             
@@ -507,7 +531,6 @@
             await sleep(700); 
             onesTube.innerHTML = ""; 
 
-            // 10円玉を10の部屋に落とす
             const tenCoin = document.createElement('div');
             tenCoin.className = 'coin coin-10';
             tenCoin.textContent = '10';
@@ -516,7 +539,6 @@
             
             await sleep(500); 
 
-            // 【ステップ3】1の位：残りのコインを移動
             for(let i=0; i<remainingOnes; i++) {
                 const coin = onesHoverArea.lastElementChild;
                 if(coin) {
@@ -530,7 +552,6 @@
             
             await sleep(300);
 
-            // 【ステップ4】10の位：ホバリングしている10のコインを移動（レベル2のみ）
             if (currentLevel === 2) {
                 const tenHoverCoins = Array.from(tensHoverArea.children).reverse();
                 for(let i=0; i<tenHoverCoins.length; i++) {
@@ -543,7 +564,6 @@
                 }
             }
 
-            // フィナーレ演出
             overlay.style.opacity = "1";
             playBeep(523.25, 'sine', 0.1); 
             setTimeout(() => playBeep(659.25, 'sine', 0.1), 100); 
