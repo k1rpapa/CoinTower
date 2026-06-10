@@ -74,6 +74,7 @@
             font-size: clamp(24px, 7vw, 40px); font-weight: bold; color: #333;
             margin: 5px 0 15px 0; height: 50px; display: flex; align-items: center; justify-content: center;
             background: #fff; padding: 5px 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
         }
         .cursor {
             border-bottom: 4px solid #007bff; width: 20px; display: inline-block;
@@ -117,7 +118,6 @@
             font-weight: bold; font-size: calc(var(--coin-size) * 0.55);
             margin: var(--coin-margin) 0; box-shadow: 0 3px 5px rgba(0,0,0,0.2);
             z-index: 5; box-sizing: border-box;
-            /* Y軸回転時の立体感を強調 */
             transform-style: preserve-3d;
         }
         .coin-1 { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border: 2px solid #9e9e9e; color: #424242; }
@@ -241,6 +241,7 @@
         function startNextRound() {
             isAnimating = false; resetInput();
             onesTube.innerHTML = ""; tensTube.innerHTML = ""; onesHoverArea.innerHTML = ""; tensHoverArea.innerHTML = ""; overlay.style.opacity = "0";
+            eqAns.style.opacity = "1"; // ハイライト演出で消えるためリセット
 
             valX_ones = Math.floor(Math.random() * 4) + 6; 
             const minY = 11 - valX_ones;
@@ -294,6 +295,68 @@
             }
         }
 
+        // ★新規追加：計算式の解を中央に飛ばして目立たせる演出
+        async function animateEquationAnswer() {
+            const rect = eqAns.getBoundingClientRect();
+            
+            // 飛んでいく用のダミーを作成
+            const popText = document.createElement('div');
+            popText.textContent = expectedAnswer;
+            popText.style.position = 'fixed';
+            popText.style.left = `${rect.left + rect.width / 2}px`;
+            popText.style.top = `${rect.top + rect.height / 2}px`;
+            popText.style.transform = `translate(-50%, -50%) scale(1)`;
+            popText.style.fontSize = window.getComputedStyle(eqAns).fontSize;
+            popText.style.fontWeight = 'bold';
+            popText.style.color = '#333';
+            popText.style.zIndex = '3000';
+            popText.style.pointerEvents = 'none';
+            document.body.appendChild(popText);
+
+            // 元の文字を透明にする
+            eqAns.style.opacity = '0';
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            // 1. 中央へ飛んでいきながら巨大化
+            const flyIn = popText.animate([
+                { left: `${rect.left + rect.width / 2}px`, top: `${rect.top + rect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333' },
+                { left: `${centerX}px`, top: `${centerY}px`, transform: `translate(-50%, -50%) scale(5)`, color: '#e60012', textShadow: '0 0 20px #ffeb3b, 0 0 40px #ff9800' }
+            ], { duration: 600, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards' });
+
+            playBeep(880, 'sine', 0.1); setTimeout(() => playBeep(1108.73, 'sine', 0.1), 100); setTimeout(() => playBeep(1318.51, 'sine', 0.3), 200);
+            
+            await flyIn.finished;
+
+            // 2. 中央でパルス（鼓動）＆星を散らす
+            spawnStars(centerX, centerY);
+            
+            const pulse = popText.animate([
+                { transform: `translate(-50%, -50%) scale(5)` },
+                { transform: `translate(-50%, -50%) scale(5.5)` },
+                { transform: `translate(-50%, -50%) scale(5)` }
+            ], { duration: 500, iterations: 2, easing: 'ease-in-out' });
+            
+            await pulse.finished;
+            await sleep(300);
+
+            // 3. 元の位置へ戻りながら元のサイズに
+            const newRect = eqAns.getBoundingClientRect(); // リサイズ対策で再取得
+            playBeep(1318.51, 'sine', 0.1); setTimeout(() => playBeep(880, 'sine', 0.1), 100);
+
+            const flyOut = popText.animate([
+                { left: `${centerX}px`, top: `${centerY}px`, transform: `translate(-50%, -50%) scale(5)`, color: '#e60012', textShadow: '0 0 20px #ffeb3b, 0 0 40px #ff9800' },
+                { left: `${newRect.left + newRect.width / 2}px`, top: `${newRect.top + newRect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333', textShadow: 'none' }
+            ], { duration: 500, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
+            
+            await flyOut.finished;
+
+            // ダミーを消して元の文字を再表示
+            popText.remove();
+            eqAns.style.opacity = '1';
+        }
+
         async function processCorrectAnswer() {
             isAnimating = true; 
             playBeep(1200, 'sine', 0.1); setTimeout(() => playBeep(1600, 'sine', 0.2), 100); 
@@ -301,13 +364,11 @@
             const neededFor10 = 10 - valX_ones;
             const remainingOnes = valY_ones - neededFor10;
 
-            // 【ステップ1】一番上のコインから順に、完全な真横スライド
             const coinsToMove = [];
             for(let i=0; i<neededFor10; i++) {
                 coinsToMove.push(onesHoverArea.children[i]);
             }
 
-            // 透明なスペーサーを入れて、残りのコインの位置を固定する
             coinsToMove.forEach(coin => {
                 const spacer = document.createElement('div');
                 spacer.className = 'coin spacer';
@@ -317,39 +378,35 @@
 
             const firstRects = coinsToMove.map(coin => coin.getBoundingClientRect());
 
-            // チューブにアペンド（物理的に正しい高さを割り当てるため、逆順で挿入）
             for(let i = neededFor10 - 1; i >= 0; i--) {
                 onesTube.appendChild(coinsToMove[i]);
             }
 
             const lastRects = coinsToMove.map(coin => coin.getBoundingClientRect());
 
-            // アニメーション用に初期位置へセット
             coinsToMove.forEach((coin, i) => {
                 coin.style.transform = `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)`;
             });
 
-            void onesTube.offsetWidth; // 描画のリフレッシュ（魔法の1行）
+            void onesTube.offsetWidth; 
 
-            // 上から順番に（インデックス0から）アニメーションを実行
             for(let i=0; i<neededFor10; i++) {
                 const coin = coinsToMove[i];
                 const deltaX = firstRects[i].left - lastRects[i].left;
-                const deltaY = firstRects[i].top - lastRects[i].top; // この値は必ず0（真横）になります
+                const deltaY = firstRects[i].top - lastRects[i].top; 
 
                 coin.animate([
                     { transform: `translate(${deltaX}px, ${deltaY}px) scale(1.1)`, opacity: 0.5 },
                     { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }
                 ], { duration: 300, easing: 'ease-in-out' });
                 
-                playBeep(1200 + i * 100, 'sine', 0.05); // ピッチが上がっていく
+                playBeep(1200 + i * 100, 'sine', 0.05);
                 await sleep(300); 
-                coin.style.transform = 'translate(0px, 0px)'; // 終了位置にロック
+                coin.style.transform = 'translate(0px, 0px)'; 
             }
 
             await sleep(200);
 
-            // 【ステップ2】Y軸回転（コイントス）によるレベルアップ変身演出
             const onesCoins = Array.from(onesTube.querySelectorAll('.coin'));
             onesCoins.forEach(c => c.classList.add('glow-merge'));
             await sleep(700); 
@@ -370,7 +427,6 @@
             
             setTimeout(() => spawnStars(startRect.left + 20, startRect.top - 150), 600);
 
-            // ★変更：rotate() から rotateY() へ変更し、Y軸を中心に回転（コイントス）させる
             const evolveAnim = celebCoin.animate([
                 { transform: `translate(${startRect.left}px, ${startRect.top}px) scale(0.5) rotateY(0deg)`, opacity: 0 },
                 { transform: `translate(${startRect.left}px, ${startRect.top - 150}px) scale(2.5) rotateY(360deg)`, opacity: 1, boxShadow: '0 0 50px #ffeb3b, 0 0 100px #ff9800', offset: 0.3 },
@@ -383,7 +439,6 @@
             tensTube.appendChild(createCoin(10));
             await sleep(300);
 
-            // 【ステップ3】残りのコインを「一斉に落としてから → 1つずつ横へスライド」
             if (remainingOnes > 0) {
                 const moveData = [];
                 const coinsToDrop = Array.from(onesHoverArea.querySelectorAll('.coin:not(.spacer)')).reverse();
@@ -393,11 +448,7 @@
                     const firstRect = coin.getBoundingClientRect();
                     onesTube.appendChild(coin);
                     const lastRect = coin.getBoundingClientRect();
-                    moveData.push({
-                        coin: coin,
-                        deltaX: firstRect.left - lastRect.left,
-                        deltaY: firstRect.top - lastRect.top
-                    });
+                    moveData.push({ coin: coin, deltaX: firstRect.left - lastRect.left, deltaY: firstRect.top - lastRect.top });
                 }
 
                 moveData.forEach(({ coin, deltaX, deltaY }) => {
@@ -424,7 +475,6 @@
                 await sleep(300);
             }
 
-            // 【ステップ4】10のホバリングコインの移動（レベル2のみ）
             if (currentLevel === 2 && tensHoverArea.children.length > 0) {
                 const moveDataTens = [];
                 const tenHoverCoins = Array.from(tensHoverArea.children).reverse();
@@ -433,9 +483,7 @@
                     const firstRect = coin.getBoundingClientRect();
                     tensTube.appendChild(coin);
                     const lastRect = coin.getBoundingClientRect();
-                    moveDataTens.push({
-                        coin: coin, deltaX: firstRect.left - lastRect.left, deltaY: firstRect.top - lastRect.top
-                    });
+                    moveDataTens.push({ coin: coin, deltaX: firstRect.left - lastRect.left, deltaY: firstRect.top - lastRect.top });
                 }
 
                 moveDataTens.forEach(({ coin, deltaX, deltaY }) => {
@@ -461,11 +509,10 @@
                 }
             }
 
-            // フィナーレ演出
+            // 【ステップ5】フィナーレ演出（解のポップアップ）
             overlay.style.opacity = "1";
-            playBeep(523.25, 'sine', 0.1); setTimeout(() => playBeep(659.25, 'sine', 0.1), 100); setTimeout(() => playBeep(783.99, 'sine', 0.3), 200); 
-
-            await sleep(2000); 
+            await animateEquationAnswer();
+            await sleep(500); 
             startNextRound(); 
         }
 
