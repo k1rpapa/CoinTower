@@ -11,14 +11,9 @@
 
     <style>
         :root {
-            --coin-size: 32px;
-            --coin-margin: 2px;
-            --slot-size: 36px; 
-            --tube-height: 360px; 
-            --tube-width: 50px;
-            --hover-offset: 65px;
-            --game-gap: 80px;
-            --btn-height: 55px;
+            --coin-size: 32px; --coin-margin: 2px; --slot-size: 36px; 
+            --tube-height: 360px; --tube-width: 50px; --hover-offset: 65px;
+            --game-gap: 80px; --btn-height: 55px;
         }
 
         @media (max-height: 800px) {
@@ -44,6 +39,21 @@
             overflow: hidden; touch-action: manipulation;
         }
 
+        /* ヘッダーエリア（戻るボタン ＆ ガイダンス切替） */
+        #header-controls {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 10px; box-sizing: border-box; visibility: hidden; z-index: 50;
+        }
+        #back-btn {
+            padding: 8px 15px; font-size: 14px; font-weight: bold;
+            color: #fff; background-color: #6c757d; border: none; border-radius: 8px; cursor: pointer;
+        }
+        .toggle-switch {
+            display: flex; align-items: center; font-size: 14px; font-weight: bold; color: #555;
+            background: #fff; padding: 5px 10px; border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .toggle-switch input { margin-right: 5px; transform: scale(1.2); }
+
         #level-select-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(240, 244, 248, 0.95);
@@ -68,7 +78,7 @@
 
         #game-area {
             display: flex; justify-content: center; gap: var(--game-gap); 
-            margin-bottom: 15px; visibility: hidden;
+            margin-bottom: 15px; visibility: hidden; position: relative;
         }
         .tube-container { display: flex; flex-direction: column; align-items: center; }
         .tube-label { font-size: 16px; font-weight: bold; color: #555; margin-bottom: 5px; }
@@ -88,10 +98,6 @@
             display: flex; flex-direction: column; align-items: center; z-index: 10;
         }
 
-        /* スワイプを促すための微細なアニメーション */
-        @keyframes hintSwipe { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-8px); } }
-        .hint-swipe { animation: hintSwipe 1.5s infinite ease-in-out; cursor: pointer; }
-
         .coin {
             width: var(--coin-size); height: var(--coin-size); border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
@@ -101,11 +107,26 @@
         .coin-1 { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border: 2px solid #9e9e9e; color: #424242; }
         .coin-10 { background: radial-gradient(circle at 30% 30%, #ffcc80, #d84315); border: 2px solid #8d6e63; color: #fff; }
 
+        /* スワイプできる要素であることを示す */
+        .swipeable { cursor: pointer; }
+
+        /* ガイダンス（指マーク） */
+        #guidance-hand {
+            position: absolute; font-size: 30px; pointer-events: none; z-index: 2000;
+            display: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        @keyframes swipeAnimation {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            20% { transform: translate(0, 0) scale(0.9); opacity: 1; }
+            80% { transform: translate(-40px, 0) scale(0.9); opacity: 1; }
+            100% { transform: translate(-40px, 0) scale(1); opacity: 0; }
+        }
+
         #numpad {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 320px; visibility: hidden;
             transition: opacity 0.3s;
         }
-        /* フェーズ1ではテンキーを半透明にして無効化 */
+        /* 計算プロセス中はテンキーを無効化 */
         .numpad-disabled { opacity: 0.3; pointer-events: none; }
 
         .num-btn {
@@ -123,10 +144,6 @@
             position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
             background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,255,255,0) 70%); opacity: 0; z-index: 100; transition: opacity 0.3s;
         }
-        #back-btn {
-            position: absolute; top: 10px; left: 10px; padding: 8px 15px; font-size: 14px; font-weight: bold;
-            color: #fff; background-color: #6c757d; border: none; border-radius: 8px; cursor: pointer; visibility: hidden; z-index: 50;
-        }
     </style>
 </head>
 <body>
@@ -137,7 +154,14 @@
         <button class="level-btn lvl2" onclick="startGame(2)">レベル 2<br><span style="font-size:16px;">(2桁 ＋ 2桁)</span></button>
     </div>
 
-    <button id="back-btn" onclick="showLevelSelect()">◀ もどる</button>
+    <div id="header-controls">
+        <button id="back-btn" onclick="showLevelSelect()">◀ もどる</button>
+        <label class="toggle-switch">
+            <input type="checkbox" id="guide-toggle" checked onchange="updateGuidance()">
+            ナビゲーション
+        </label>
+    </div>
+
     <div id="success-overlay"></div>
 
     <div id="equation">
@@ -155,26 +179,36 @@
         <div class="tube-container">
             <div class="tube-label">1の部屋</div>
             <div class="tube-wrapper">
-                <div id="ones-tube" class="tube"></div>
-                <div id="ones-hover-area" class="hover-area"></div>
+                <div id="ones-tube" class="tube swipeable"></div>
+                <div id="ones-hover-area" class="hover-area swipeable"></div>
             </div>
         </div>
+        <div id="guidance-hand">👈</div>
     </div>
 
     <div id="numpad"></div>
 
     <script>
-        const levelSelect = document.getElementById('level-select-overlay'), gameArea = document.getElementById('game-area'), numpad = document.getElementById('numpad'), backBtn = document.getElementById('back-btn');
+        const levelSelect = document.getElementById('level-select-overlay'), gameArea = document.getElementById('game-area'), numpad = document.getElementById('numpad');
+        const headerControls = document.getElementById('header-controls'), guideToggle = document.getElementById('guide-toggle'), guideHand = document.getElementById('guidance-hand');
         const eqX = document.getElementById('eq-x'), eqY = document.getElementById('eq-y'), eqAns = document.getElementById('eq-ans'), cursor = document.getElementById('cursor');
         const onesTube = document.getElementById('ones-tube'), tensTube = document.getElementById('tens-tube'), onesHoverArea = document.getElementById('ones-hover-area'), tensHoverArea = document.getElementById('tens-hover-area'), overlay = document.getElementById('success-overlay');
 
         let currentLevel = 1, valX = 0, valY = 0, valX_ones = 0, valX_tens = 0, valY_ones = 0, valY_tens = 0, expectedAnswer = 0, currentInput = "";
         let isAnimating = false;
         
-        // ★新規追加：スワイプフェーズの管理変数
+        // 状態管理（計算の論理ステップ）
+        const STATE_MAKE_10 = 0;        // 1の部屋を10にする
+        const STATE_EVOLVE_10 = 1;      // 10の塊を繰り上げる
+        const STATE_MOVE_REMAINING = 2; // 残りの1を移動させる
+        const STATE_MOVE_TENS = 3;      // (Lv2用) 10のコインを移動させる
+        const STATE_INPUT_ANSWER = 4;   // テンキーで解答する
+        
+        let gameState = STATE_MAKE_10;
         let neededFor10 = 0;
         let swipedCount = 0;
-        let isPhase1 = true;
+        let remainingSwipedCount = 0;
+        let tensSwipedCount = 0;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBeep(frequency, type, duration) {
@@ -201,7 +235,7 @@
             btn.className = 'num-btn'; btn.textContent = val;
             if (val === 'クリア') {
                 btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; btn.style.backgroundColor = '#6c757d'; btn.style.boxShadow = '0 4px 0 #495057';
-                btn.onclick = () => { if(!isAnimating && !isPhase1) resetInput(); };
+                btn.onclick = () => { if(!isAnimating && gameState === STATE_INPUT_ANSWER) resetInput(); };
             } else btn.onclick = () => handleInput(val, btn);
             numpad.appendChild(btn);
         }
@@ -213,22 +247,20 @@
         }
 
         function showLevelSelect() {
-            levelSelect.style.display = 'flex'; gameArea.style.visibility = 'hidden'; numpad.style.visibility = 'hidden'; backBtn.style.visibility = 'hidden'; resetInput();
+            levelSelect.style.display = 'flex'; gameArea.style.visibility = 'hidden'; numpad.style.visibility = 'hidden'; headerControls.style.visibility = 'hidden'; resetInput();
+            guideHand.style.display = 'none';
         }
 
         function startGame(level) {
-            currentLevel = level; levelSelect.style.display = 'none'; gameArea.style.visibility = 'visible'; numpad.style.visibility = 'visible'; backBtn.style.visibility = 'visible';
+            currentLevel = level; levelSelect.style.display = 'none'; gameArea.style.visibility = 'visible'; numpad.style.visibility = 'visible'; headerControls.style.visibility = 'visible';
             tensHoverArea.style.display = currentLevel === 1 ? 'none' : 'flex'; startNextRound();
         }
 
         function startNextRound() {
-            isAnimating = false; isPhase1 = true; resetInput();
+            isAnimating = false; gameState = STATE_MAKE_10; resetInput();
             onesTube.innerHTML = ""; tensTube.innerHTML = ""; onesHoverArea.innerHTML = ""; tensHoverArea.innerHTML = ""; overlay.style.opacity = "0";
             eqAns.style.opacity = "1";
-            
-            // ホバリングエリアの設定をリセット（上詰めで配置）
-            onesHoverArea.style.flexDirection = 'column';
-            tensHoverArea.style.flexDirection = 'column';
+            onesHoverArea.style.flexDirection = 'column'; tensHoverArea.style.flexDirection = 'column';
 
             valX_ones = Math.floor(Math.random() * 4) + 6; 
             const minY = 11 - valX_ones;
@@ -245,138 +277,241 @@
             for(let i=0; i<valY_tens; i++) tensHoverArea.appendChild(createCoin(10));
             for(let i=0; i<valY_ones; i++) onesHoverArea.appendChild(createCoin(1));
 
-            // ★フェーズ1の初期設定：テンキーを無効化し、スワイプを促すアニメーションを追加
+            // ステートの初期化
             neededFor10 = 10 - valX_ones;
-            swipedCount = 0;
+            swipedCount = 0; remainingSwipedCount = 0; tensSwipedCount = 0;
             numpad.classList.add('numpad-disabled');
-            onesHoverArea.classList.add('hint-swipe');
+            updateGuidance();
         }
 
-        // ★スワイプ＆タップのイベントリスナー設定
+        // ★動的ガイダンス機能
+        function updateGuidance() {
+            if (!guideToggle.checked || gameState === STATE_INPUT_ANSWER) {
+                guideHand.style.display = 'none';
+                return;
+            }
+            guideHand.style.display = 'block';
+            guideHand.style.animation = 'none'; // リセット
+            void guideHand.offsetWidth; 
+
+            let targetElement = null;
+            if (gameState === STATE_MAKE_10) {
+                targetElement = onesHoverArea.children[swipedCount];
+            } else if (gameState === STATE_EVOLVE_10) {
+                targetElement = onesTube.firstElementChild; // 積まれた10のタワーの中央付近
+            } else if (gameState === STATE_MOVE_REMAINING) {
+                targetElement = onesHoverArea.lastElementChild; // 下に落ちたブロックの一番上
+            } else if (gameState === STATE_MOVE_TENS) {
+                targetElement = tensHoverArea.lastElementChild;
+            }
+
+            if (targetElement) {
+                const rect = targetElement.getBoundingClientRect();
+                const gameAreaRect = gameArea.getBoundingClientRect();
+                // gameAreaを基準とした相対座標に配置
+                guideHand.style.left = `${rect.left - gameAreaRect.left + 20}px`;
+                guideHand.style.top = `${rect.top - gameAreaRect.top + 5}px`;
+                guideHand.style.animation = 'swipeAnimation 1.5s infinite';
+            }
+        }
+
+        // タップ/スワイプの統合イベントリスナー
         function setupSwipeEvents() {
-            let touchStartX = 0;
-            
-            // スワイプ開始位置を記録
-            onesHoverArea.addEventListener('touchstart', e => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, {passive: true});
+            const addSwipeHandler = (el, handler) => {
+                let startX = 0;
+                el.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; }, {passive: true});
+                el.addEventListener('touchend', e => {
+                    if (isAnimating) return;
+                    if (startX - e.changedTouches[0].screenX > 20) handler(); // 左スワイプ
+                });
+                el.addEventListener('click', () => { if (!isAnimating) handler(); }); // タップでも作動
+            };
 
-            // スワイプ終了位置で判定（左に30px以上動かした場合）
-            onesHoverArea.addEventListener('touchend', e => {
-                if (!isPhase1 || isAnimating || swipedCount >= neededFor10) return;
-                const touchEndX = e.changedTouches[0].screenX;
-                if (touchStartX - touchEndX > 30) {
-                    executeSwipeCoin();
-                }
-            });
-
-            // PCテスト用：クリック（タップ）でも移動できるようにする
-            onesHoverArea.addEventListener('click', () => {
-                if (!isPhase1 || isAnimating || swipedCount >= neededFor10) return;
-                executeSwipeCoin();
-            });
+            addSwipeHandler(onesHoverArea, handleOnesHoverSwipe);
+            addSwipeHandler(onesTube, handleOnesTubeSwipe);
+            addSwipeHandler(tensHoverArea, handleTensHoverSwipe);
         }
 
-        // ★手動スワイプ時のコイン移動ロジック
-        async function executeSwipeCoin() {
-            isAnimating = true;
-            onesHoverArea.classList.remove('hint-swipe'); // ヒントアニメーションを消す
+        // 【状態1＆3】1のホバリングエリアをスワイプ
+        async function handleOnesHoverSwipe() {
+            if (gameState === STATE_MAKE_10 && swipedCount < neededFor10) {
+                isAnimating = true; guideHand.style.display = 'none';
+                
+                const coin = onesHoverArea.children[swipedCount];
+                if (coin) {
+                    const spacer = document.createElement('div');
+                    spacer.className = 'coin spacer'; spacer.style.visibility = 'hidden';
+                    onesHoverArea.insertBefore(spacer, coin);
 
-            // 一番上のコインを取得（スペーサーがある場合はそれを飛ばす）
-            // 実際には子要素の配列のうち、swipedCountの数だけスペーサーがあるので、[swipedCount]番目が実体のトップコイン
-            const coinIndex = swipedCount; 
-            const coin = onesHoverArea.children[coinIndex];
+                    const firstRect = coin.getBoundingClientRect(); onesTube.appendChild(coin);
+                    const lastRect = coin.getBoundingClientRect();
+
+                    coin.animate([
+                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px) scale(1.1)`, opacity: 0.5 },
+                        { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }
+                    ], { duration: 200, easing: 'ease-out' });
+
+                    playBeep(1200 + swipedCount * 100, 'sine', 0.05);
+                    swipedCount++;
+                    await sleep(200);
+                }
+
+                if (swipedCount === neededFor10) {
+                    gameState = STATE_EVOLVE_10;
+                }
+                isAnimating = false;
+                updateGuidance();
+
+            } else if (gameState === STATE_MOVE_REMAINING) {
+                isAnimating = true; guideHand.style.display = 'none';
+                
+                const coinsToDrop = Array.from(onesHoverArea.querySelectorAll('.coin:not(.spacer)')).reverse();
+                if (remainingSwipedCount < coinsToDrop.length) {
+                    const coin = coinsToDrop[remainingSwipedCount];
+                    const firstRect = coin.getBoundingClientRect(); onesTube.appendChild(coin);
+                    const lastRect = coin.getBoundingClientRect();
+
+                    coin.animate([
+                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px)` },
+                        { transform: `translate(0px, 0px)` }
+                    ], { duration: 200, easing: 'ease-out' });
+
+                    playBeep(1000 + remainingSwipedCount * 100, 'sine', 0.05);
+                    remainingSwipedCount++;
+                    await sleep(200);
+                }
+
+                if (remainingSwipedCount === coinsToDrop.length) {
+                    gameState = (currentLevel === 2 && valY_tens > 0) ? STATE_MOVE_TENS : STATE_INPUT_ANSWER;
+                    if (gameState === STATE_INPUT_ANSWER) enableInput();
+                }
+                isAnimating = false;
+                updateGuidance();
+            }
+        }
+
+        // 【状態2】完成した10のタワーをスワイプして繰り上げ
+        async function handleOnesTubeSwipe() {
+            if (gameState !== STATE_EVOLVE_10) return;
+            isAnimating = true; guideHand.style.display = 'none';
+
+            const onesCoins = Array.from(onesTube.querySelectorAll('.coin'));
+            onesCoins.forEach(c => c.classList.add('glow-merge'));
+            await sleep(700); 
+            onesTube.innerHTML = ""; 
+
+            const dummyStart = createCoin(10); dummyStart.style.visibility = 'hidden'; onesTube.appendChild(dummyStart);
+            const startRect = dummyStart.getBoundingClientRect(); dummyStart.remove();
             
-            if (coin) {
-                // 透明なスペーサーを置いて、下のコインがズレないようにする
-                const spacer = document.createElement('div');
-                spacer.className = 'coin spacer';
-                spacer.style.visibility = 'hidden';
-                onesHoverArea.insertBefore(spacer, coin);
+            const dummyTarget = createCoin(10); dummyTarget.style.visibility = 'hidden'; tensTube.appendChild(dummyTarget);
+            const targetRect = dummyTarget.getBoundingClientRect(); dummyTarget.remove();
 
-                const firstRect = coin.getBoundingClientRect();
-                onesTube.appendChild(coin);
+            const celebCoin = createCoin(10);
+            celebCoin.style.position = 'fixed'; celebCoin.style.left = '0px'; celebCoin.style.top = '0px'; celebCoin.style.zIndex = '1000';
+            document.body.appendChild(celebCoin);
+
+            playBeep(440, 'sine', 0.1); setTimeout(() => playBeep(554.37, 'sine', 0.1), 100);
+            setTimeout(() => playBeep(659.25, 'sine', 0.1), 200); setTimeout(() => playBeep(880, 'sine', 0.3), 300);
+
+            const evolveAnim = celebCoin.animate([
+                { transform: `translate(${startRect.left}px, ${startRect.top}px) scale(0.5) rotateY(0deg)`, opacity: 0 },
+                { transform: `translate(${startRect.left}px, ${startRect.top - 150}px) scale(2.5) rotateY(360deg)`, opacity: 1, boxShadow: '0 0 50px #ffeb3b, 0 0 100px #ff9800', offset: 0.3 },
+                { transform: `translate(${startRect.left}px, ${startRect.top - 150}px) scale(2.5) rotateY(720deg)`, opacity: 1, boxShadow: '0 0 50px #ffeb3b, 0 0 100px #ff9800', offset: 0.7 },
+                { transform: `translate(${targetRect.left}px, ${targetRect.top}px) scale(1) rotateY(1080deg)`, opacity: 1, boxShadow: '0 3px 5px rgba(0,0,0,0.2)' }
+            ], { duration: 1500, easing: 'ease-in-out', fill: 'forwards' });
+
+            await evolveAnim.finished;
+            celebCoin.remove();
+            tensTube.appendChild(createCoin(10));
+
+            // 残りのコインと10のコインを下に落とす
+            const remainingOnes = valY_ones - neededFor10;
+            if (remainingOnes > 0 || (currentLevel === 2 && valY_tens > 0)) {
+                
+                if (remainingOnes > 0) {
+                    const spacers = onesHoverArea.querySelectorAll('.spacer');
+                    spacers.forEach(s => s.remove());
+                    const coinsToDrop = Array.from(onesHoverArea.children);
+                    const firstRects = coinsToDrop.map(c => c.getBoundingClientRect());
+                    onesHoverArea.style.flexDirection = 'column-reverse';
+                    const lastRects = coinsToDrop.map(c => c.getBoundingClientRect());
+
+                    coinsToDrop.forEach((coin, i) => {
+                        coin.animate([
+                            { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
+                            { transform: `translate(0px, 0px)` }
+                        ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
+                    });
+                }
+
+                if (currentLevel === 2 && valY_tens > 0) {
+                    const tensToDrop = Array.from(tensHoverArea.children);
+                    const firstRects = tensToDrop.map(c => c.getBoundingClientRect());
+                    tensHoverArea.style.flexDirection = 'column-reverse';
+                    const lastRects = tensToDrop.map(c => c.getBoundingClientRect());
+
+                    tensToDrop.forEach((coin, i) => {
+                        coin.animate([
+                            { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
+                            { transform: `translate(0px, 0px)` }
+                        ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
+                    });
+                }
+
+                setTimeout(() => playBeep(200, 'square', 0.1), 350);
+                await sleep(400);
+            }
+
+            gameState = (remainingOnes > 0) ? STATE_MOVE_REMAINING : ((currentLevel === 2 && valY_tens > 0) ? STATE_MOVE_TENS : STATE_INPUT_ANSWER);
+            if (gameState === STATE_INPUT_ANSWER) enableInput();
+            
+            isAnimating = false;
+            updateGuidance();
+        }
+
+        // 【状態4】10のホバリングエリアをスワイプ（Lv2のみ）
+        async function handleTensHoverSwipe() {
+            if (gameState !== STATE_MOVE_TENS) return;
+            isAnimating = true; guideHand.style.display = 'none';
+
+            const coinsToDrop = Array.from(tensHoverArea.children).reverse();
+            if (tensSwipedCount < coinsToDrop.length) {
+                const coin = coinsToDrop[tensSwipedCount];
+                const firstRect = coin.getBoundingClientRect(); tensTube.appendChild(coin);
                 const lastRect = coin.getBoundingClientRect();
 
                 coin.animate([
-                    { transform: `translate(${firstRect.left - lastRect.left}px, ${firstRect.top - lastRect.top}px) scale(1.1)`, opacity: 0.5 },
-                    { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }
+                    { transform: `translate(${firstRect.left - lastRect.left}px, 0px)` },
+                    { transform: `translate(0px, 0px)` }
                 ], { duration: 200, easing: 'ease-out' });
 
-                playBeep(1200 + swipedCount * 100, 'sine', 0.05);
-                
-                swipedCount++;
+                playBeep(800 + tensSwipedCount * 100, 'sine', 0.05);
+                tensSwipedCount++;
                 await sleep(200);
             }
 
-            isAnimating = false;
-
-            // 10個揃ったら、フェーズ2（落下＆テンキー有効化）へ移行
-            if (swipedCount === neededFor10) {
-                transitionToPhase2();
+            if (tensSwipedCount === coinsToDrop.length) {
+                gameState = STATE_INPUT_ANSWER;
+                enableInput();
             }
+            isAnimating = false;
+            updateGuidance();
         }
 
-        // ★フェーズ2：残りのコインがブロックになって落ち、解答待ちになる
-        async function transitionToPhase2() {
-            isPhase1 = false;
-            isAnimating = true;
-            await sleep(200);
-
-            const remainingOnes = valY_ones - neededFor10;
-
-            if (remainingOnes > 0) {
-                // スペーサーを全て削除し、flex方向を反転させることで、コインを下にスナップ（落下）させる
-                const spacers = onesHoverArea.querySelectorAll('.spacer');
-                spacers.forEach(s => s.remove());
-                
-                const coinsToDrop = Array.from(onesHoverArea.children);
-                const firstRects = coinsToDrop.map(c => c.getBoundingClientRect());
-                
-                onesHoverArea.style.flexDirection = 'column-reverse'; // これで下にブロック化される
-                const lastRects = coinsToDrop.map(c => c.getBoundingClientRect());
-
-                coinsToDrop.forEach((coin, i) => {
-                    coin.animate([
-                        { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
-                        { transform: `translate(0px, 0px)` }
-                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
-                });
-
-                setTimeout(() => playBeep(200, 'square', 0.1), 350);
-            }
-
-            // レベル2の場合、10のコインも下に落とす
-            if (currentLevel === 2 && valY_tens > 0) {
-                const tensToDrop = Array.from(tensHoverArea.children);
-                const firstRects = tensToDrop.map(c => c.getBoundingClientRect());
-                
-                tensHoverArea.style.flexDirection = 'column-reverse';
-                const lastRects = tensToDrop.map(c => c.getBoundingClientRect());
-
-                tensToDrop.forEach((coin, i) => {
-                    coin.animate([
-                        { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
-                        { transform: `translate(0px, 0px)` }
-                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
-                });
-            }
-
-            await sleep(400);
-
-            // テンキーを有効化し、解答を促す
+        // 計算プロセスがすべて終わり、解答を促す
+        function enableInput() {
             numpad.classList.remove('numpad-disabled');
-            isAnimating = false;
+            playBeep(1000, 'sine', 0.1); setTimeout(() => playBeep(1500, 'sine', 0.15), 100); // ピロリン♪（入力準備完了）
         }
 
         function resetInput() { currentInput = ""; eqAns.textContent = ""; cursor.style.display = "inline-block"; }
 
         function handleInput(num, btnElement) {
-            if (isAnimating || isPhase1 || currentInput.length >= expectedAnswer.toString().length) return;
+            if (isAnimating || gameState !== STATE_INPUT_ANSWER || currentInput.length >= expectedAnswer.toString().length) return;
             playBeep(800, 'sine', 0.1); currentInput += num.toString(); eqAns.textContent = currentInput;
             if (currentInput.length === expectedAnswer.toString().length) {
                 cursor.style.display = "none";
-                if (parseInt(currentInput) === expectedAnswer) processCorrectAnswer();
+                if (parseInt(currentInput) === expectedAnswer) showFinalReward();
                 else {
                     playBeep(150, 'sawtooth', 0.3); btnElement.classList.add('shake');
                     setTimeout(() => { btnElement.classList.remove('shake'); resetInput(); }, 400);
@@ -385,18 +520,13 @@
         }
 
         function spawnStars(cx, cy) {
-            for(let i=0; i<12; i++) {
-                const star = document.createElement('div');
-                star.textContent = '✨';
+            for(let i=0; i<15; i++) {
+                const star = document.createElement('div'); star.textContent = '✨';
                 star.style.position = 'fixed'; star.style.left = `${cx}px`; star.style.top = `${cy}px`;
-                star.style.fontSize = '30px'; star.style.zIndex = '1001'; star.style.pointerEvents = 'none';
-                star.style.transform = 'translate(-50%, -50%)';
-                document.body.appendChild(star);
-
-                const angle = (i / 12) * Math.PI * 2;
-                const distance = 100 + Math.random() * 60;
+                star.style.fontSize = '40px'; star.style.zIndex = '1001'; star.style.pointerEvents = 'none';
+                star.style.transform = 'translate(-50%, -50%)'; document.body.appendChild(star);
+                const angle = (i / 15) * Math.PI * 2; const distance = 120 + Math.random() * 80;
                 const tx = Math.cos(angle) * distance; const ty = Math.sin(angle) * distance;
-
                 const anim = star.animate([
                     { transform: `translate(-50%, -50%) scale(0) rotate(0deg)`, opacity: 1 },
                     { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(1.5) rotate(180deg)`, opacity: 0 }
@@ -405,7 +535,11 @@
             }
         }
 
-        async function animateEquationAnswer() {
+        // 解のポップアップと次への遷移（プロセスを分離）
+        async function showFinalReward() {
+            isAnimating = true;
+            overlay.style.opacity = "1";
+            
             const rect = eqAns.getBoundingClientRect();
             const popText = document.createElement('div');
             popText.textContent = expectedAnswer;
@@ -440,92 +574,8 @@
             ], { duration: 500, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
             
             await flyOut.finished; popText.remove(); eqAns.style.opacity = '1';
-        }
-
-        // ★フェーズ3：正解後のフィナーレ（残りのコインの移動など）
-        async function processCorrectAnswer() {
-            isAnimating = true; 
-            playBeep(1200, 'sine', 0.1); setTimeout(() => playBeep(1600, 'sine', 0.2), 100); 
-
-            // 1の部屋のコインが合体して光る
-            const onesCoins = Array.from(onesTube.querySelectorAll('.coin'));
-            onesCoins.forEach(c => c.classList.add('glow-merge'));
-            await sleep(700); 
-            onesTube.innerHTML = ""; 
-
-            const dummyStart = createCoin(10); dummyStart.style.visibility = 'hidden'; onesTube.appendChild(dummyStart);
-            const startRect = dummyStart.getBoundingClientRect(); dummyStart.remove();
-            
-            const dummyTarget = createCoin(10); dummyTarget.style.visibility = 'hidden'; tensTube.appendChild(dummyTarget);
-            const targetRect = dummyTarget.getBoundingClientRect(); dummyTarget.remove();
-
-            const celebCoin = createCoin(10);
-            celebCoin.style.position = 'fixed'; celebCoin.style.left = '0px'; celebCoin.style.top = '0px'; celebCoin.style.zIndex = '1000';
-            document.body.appendChild(celebCoin);
-
-            playBeep(440, 'sine', 0.1); setTimeout(() => playBeep(554.37, 'sine', 0.1), 100);
-            setTimeout(() => playBeep(659.25, 'sine', 0.1), 200); setTimeout(() => playBeep(880, 'sine', 0.3), 300);
-            setTimeout(() => spawnStars(startRect.left + 20, startRect.top - 150), 600);
-
-            const evolveAnim = celebCoin.animate([
-                { transform: `translate(${startRect.left}px, ${startRect.top}px) scale(0.5) rotateY(0deg)`, opacity: 0 },
-                { transform: `translate(${startRect.left}px, ${startRect.top - 150}px) scale(2.5) rotateY(360deg)`, opacity: 1, boxShadow: '0 0 50px #ffeb3b, 0 0 100px #ff9800', offset: 0.3 },
-                { transform: `translate(${startRect.left}px, ${startRect.top - 150}px) scale(2.5) rotateY(720deg)`, opacity: 1, boxShadow: '0 0 50px #ffeb3b, 0 0 100px #ff9800', offset: 0.7 },
-                { transform: `translate(${targetRect.left}px, ${targetRect.top}px) scale(1) rotateY(1080deg)`, opacity: 1, boxShadow: '0 3px 5px rgba(0,0,0,0.2)' }
-            ], { duration: 2000, easing: 'ease-in-out', fill: 'forwards' });
-
-            await evolveAnim.finished;
-            celebCoin.remove();
-            tensTube.appendChild(createCoin(10));
-            await sleep(300);
-
-            // 残りのコイン（ブロック状態）を1つずつ横へスライド
-            const remainingOnes = valY_ones - neededFor10;
-            if (remainingOnes > 0) {
-                // column-reverseになっているので、上にあるコイン（DOM的には末尾）から取る
-                const coinsToMove = Array.from(onesHoverArea.children).reverse();
-                
-                for (let i = 0; i < coinsToMove.length; i++) {
-                    const coin = coinsToMove[i];
-                    const firstRect = coin.getBoundingClientRect();
-                    onesTube.appendChild(coin);
-                    const lastRect = coin.getBoundingClientRect();
-
-                    coin.animate([
-                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px)` },
-                        { transform: `translate(0px, 0px)` }
-                    ], { duration: 250, easing: 'ease-out', fill: 'forwards' });
-                    
-                    playBeep(1000 + (i * 150), 'sine', 0.05);
-                    await sleep(250);
-                }
-                await sleep(300);
-            }
-
-            // 10のホバリングコインの移動（レベル2のみ）
-            if (currentLevel === 2 && tensHoverArea.children.length > 0) {
-                const tenHoverCoins = Array.from(tensHoverArea.children).reverse();
-                for (let i = 0; i < tenHoverCoins.length; i++) {
-                    const coin = tenHoverCoins[i];
-                    const firstRect = coin.getBoundingClientRect();
-                    tensTube.appendChild(coin);
-                    const lastRect = coin.getBoundingClientRect();
-
-                    coin.animate([
-                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px)` },
-                        { transform: `translate(0px, 0px)` }
-                    ], { duration: 250, easing: 'ease-out', fill: 'forwards' });
-                    
-                    playBeep(800 + (i * 100), 'sine', 0.05);
-                    await sleep(250);
-                }
-            }
-
-            // フィナーレ演出
-            overlay.style.opacity = "1";
-            await animateEquationAnswer();
-            await sleep(500); 
-            startNextRound(); 
+            await sleep(500);
+            startNextRound();
         }
 
         window.onload = init;
