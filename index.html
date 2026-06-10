@@ -5,12 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coin Tower - 桁上がりマスター</title>
 
-    <!-- ★追加：アプリアイコンの設定（iOSおよび一般的なブラウザ用） -->
     <link rel="apple-touch-icon" href="icon_2.png">
     <link rel="icon" type="image/png" href="icon_2.png">
-
-    <!-- ★追加：Android向けに本物のアプリとして動かすためのマニフェスト読み込み -->
-    <!-- ※ manifest.json を作成した場合のみ有効になります -->
     <link rel="manifest" href="manifest.json">
 
     <style>
@@ -54,257 +50,106 @@
         body {
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
             background-color: #f0f4f8;
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow: hidden;
-            touch-action: manipulation;
+            margin: 0; padding: 10px;
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden; touch-action: manipulation;
         }
 
         #level-select-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(240, 244, 248, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 1000;
         }
-        .level-title {
-            font-size: 36px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 40px;
-        }
+        .level-title { font-size: 36px; font-weight: bold; color: #333; margin-bottom: 40px; }
         .level-btn {
-            width: 280px;
-            padding: 20px;
-            margin-bottom: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 6px 0 #0056b3;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
+            width: 280px; padding: 20px; margin-bottom: 20px; font-size: 24px; font-weight: bold;
+            color: #fff; background-color: #007bff; border: none; border-radius: 15px;
+            box-shadow: 0 6px 0 #0056b3; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
         }
-        .level-btn:active {
-            transform: translateY(6px);
-            box-shadow: 0 0 0 #0056b3;
-        }
-        .level-btn.lvl2 {
-            background-color: #28a745;
-            box-shadow: 0 6px 0 #1e7e34;
-        }
+        .level-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #0056b3; }
+        .level-btn.lvl2 { background-color: #28a745; box-shadow: 0 6px 0 #1e7e34; }
 
         #equation {
-            font-size: clamp(24px, 7vw, 40px);
-            font-weight: bold;
-            color: #333;
-            margin: 5px 0 15px 0;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            padding: 5px 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-size: clamp(24px, 7vw, 40px); font-weight: bold; color: #333;
+            margin: 5px 0 15px 0; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: #fff; padding: 5px 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-
         .cursor {
-            border-bottom: 4px solid #007bff;
-            width: 20px;
-            display: inline-block;
-            margin-left: 5px;
-            animation: blink 1s infinite;
+            border-bottom: 4px solid #007bff; width: 20px; display: inline-block;
+            margin-left: 5px; animation: blink 1s infinite;
         }
         @keyframes blink { 50% { opacity: 0; } }
 
         #game-area {
-            display: flex;
-            justify-content: center;
-            gap: var(--game-gap); 
-            margin-bottom: 15px;
-            visibility: hidden;
+            display: flex; justify-content: center; gap: var(--game-gap); 
+            margin-bottom: 15px; visibility: hidden;
         }
-
-        .tube-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .tube-label {
-            font-size: 16px;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
-        }
-
-        .tube-wrapper {
-            position: relative; 
-        }
+        .tube-container { display: flex; flex-direction: column; align-items: center; }
+        .tube-label { font-size: 16px; font-weight: bold; color: #555; margin-bottom: 5px; }
+        .tube-wrapper { position: relative; }
 
         .tube {
-            width: var(--tube-width);
-            height: var(--tube-height); 
+            width: var(--tube-width); height: var(--tube-height); 
             background-color: rgba(255, 255, 255, 0.6);
             background-image: repeating-linear-gradient(
-                to top,
-                transparent,
-                transparent calc(var(--slot-size) - 1px),
-                rgba(0, 0, 0, 0.15) calc(var(--slot-size) - 1px),
-                rgba(0, 0, 0, 0.15) var(--slot-size)
+                to top, transparent, transparent calc(var(--slot-size) - 1px),
+                rgba(0, 0, 0, 0.15) calc(var(--slot-size) - 1px), rgba(0, 0, 0, 0.15) var(--slot-size)
             );
-            border: 4px solid #b0bec5;
-            border-top: none;
-            border-radius: 0 0 15px 15px;
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05);
-            position: relative;
+            border: 4px solid #b0bec5; border-top: none; border-radius: 0 0 15px 15px;
+            display: flex; flex-direction: column-reverse; align-items: center;
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05); position: relative;
         }
-
         .tube::after {
-            content: '';
-            position: absolute;
-            bottom: calc(var(--slot-size) * 5 - 1px); 
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: rgba(0, 0, 0, 0.2); 
-            z-index: 1;
+            content: ''; position: absolute; bottom: calc(var(--slot-size) * 5 - 1px); 
+            left: 0; width: 100%; height: 2px; background-color: rgba(0, 0, 0, 0.2); z-index: 1;
         }
 
         .hover-area {
-            position: absolute;
-            top: 0; 
-            left: var(--hover-offset); 
-            width: var(--tube-width);
-            height: var(--tube-height); 
-            display: flex;
-            flex-direction: column; 
-            align-items: center;
-            z-index: 10;
+            position: absolute; top: 0; left: var(--hover-offset); 
+            width: var(--tube-width); height: var(--tube-height); 
+            display: flex; flex-direction: column; align-items: center; z-index: 10;
         }
 
         .coin {
-            width: var(--coin-size);
-            height: var(--coin-size);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: calc(var(--coin-size) * 0.55);
-            margin: var(--coin-margin) 0; 
-            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-            z-index: 5;
-            box-sizing: border-box;
-            transition: opacity 0.3s ease;
+            width: var(--coin-size); height: var(--coin-size); border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-size: calc(var(--coin-size) * 0.55);
+            margin: var(--coin-margin) 0; box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            z-index: 5; box-sizing: border-box;
+            /* Y軸回転時の立体感を強調 */
+            transform-style: preserve-3d;
         }
-
-        .coin-1 {
-            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
-            border: 2px solid #9e9e9e;
-            color: #424242;
-        }
-
-        .coin-10 {
-            background: radial-gradient(circle at 30% 30%, #ffcc80, #d84315);
-            border: 2px solid #8d6e63;
-            color: #fff;
-        }
+        .coin-1 { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border: 2px solid #9e9e9e; color: #424242; }
+        .coin-10 { background: radial-gradient(circle at 30% 30%, #ffcc80, #d84315); border: 2px solid #8d6e63; color: #fff; }
 
         #numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: 100%;
-            max-width: 320px;
-            visibility: hidden;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            width: 100%; max-width: 320px; visibility: hidden;
         }
-
         .num-btn {
-            height: var(--btn-height);
-            font-size: calc(var(--btn-height) * 0.5);
-            font-weight: bold;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 0 #0056b3;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
+            height: var(--btn-height); font-size: calc(var(--btn-height) * 0.5); font-weight: bold;
+            color: #fff; background-color: #007bff; border: none; border-radius: 12px;
+            box-shadow: 0 4px 0 #0056b3; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
         }
+        .num-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #0056b3; }
 
-        .num-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #0056b3;
-        }
-
-        @keyframes jumpIn {
-            0% { transform: translate(var(--hover-offset), -30px) scale(1.1); opacity: 0.5; }
-            100% { transform: translate(0, 0) scale(1); opacity: 1; }
-        }
-
-        @keyframes dropTen {
-            0% { transform: translateY(-100px); opacity: 0; }
-            80% { transform: translateY(10px); opacity: 1; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
-        .glow-merge {
-            animation: mergeAnim 0.7s forwards;
-        }
+        .glow-merge { animation: mergeAnim 0.7s forwards; }
         @keyframes mergeAnim {
             0% { box-shadow: 0 0 10px #ffeb3b; }
             40% { box-shadow: 0 0 30px #ffeb3b; transform: scale(1.1); opacity: 1; }
             100% { transform: scale(0); opacity: 0; }
         }
-
-        .shake {
-            animation: mildShake 0.4s ease-in-out;
-            background-color: #dc3545 !important;
-            box-shadow: 0 4px 0 #a71d2a !important;
-        }
-        @keyframes mildShake {
-            0%, 100% { transform: translateX(0); }
-            25%, 75% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-        }
+        .shake { animation: mildShake 0.4s ease-in-out; background-color: #dc3545 !important; box-shadow: 0 4px 0 #a71d2a !important; }
+        @keyframes mildShake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
 
         #success-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,255,255,0) 70%);
-            opacity: 0;
-            z-index: 100;
-            transition: opacity 0.3s;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
+            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,255,255,0) 70%); opacity: 0; z-index: 100; transition: opacity 0.3s;
         }
-        
         #back-btn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 8px 15px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #6c757d;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            visibility: hidden;
-            z-index: 50;
+            position: absolute; top: 10px; left: 10px; padding: 8px 15px; font-size: 14px; font-weight: bold;
+            color: #fff; background-color: #6c757d; border: none; border-radius: 8px; cursor: pointer; visibility: hidden; z-index: 50;
         }
     </style>
 </head>
@@ -343,233 +188,282 @@
     <div id="numpad"></div>
 
     <script>
-        const levelSelect = document.getElementById('level-select-overlay');
-        const gameArea = document.getElementById('game-area');
-        const numpad = document.getElementById('numpad');
-        const backBtn = document.getElementById('back-btn');
-        
-        const eqX = document.getElementById('eq-x');
-        const eqY = document.getElementById('eq-y');
-        const eqAns = document.getElementById('eq-ans');
-        const cursor = document.getElementById('cursor');
-        
-        const onesTube = document.getElementById('ones-tube');
-        const tensTube = document.getElementById('tens-tube');
-        const onesHoverArea = document.getElementById('ones-hover-area');
-        const tensHoverArea = document.getElementById('tens-hover-area');
-        const overlay = document.getElementById('success-overlay');
+        const levelSelect = document.getElementById('level-select-overlay'), gameArea = document.getElementById('game-area'), numpad = document.getElementById('numpad'), backBtn = document.getElementById('back-btn');
+        const eqX = document.getElementById('eq-x'), eqY = document.getElementById('eq-y'), eqAns = document.getElementById('eq-ans'), cursor = document.getElementById('cursor');
+        const onesTube = document.getElementById('ones-tube'), tensTube = document.getElementById('tens-tube'), onesHoverArea = document.getElementById('ones-hover-area'), tensHoverArea = document.getElementById('tens-hover-area'), overlay = document.getElementById('success-overlay');
 
-        let currentLevel = 1;
-        let valX = 0, valY = 0;
-        let valX_ones = 0, valX_tens = 0;
-        let valY_ones = 0, valY_tens = 0;
-        let expectedAnswer = 0;
-        let currentInput = "";
-        let isAnimating = false;
+        let currentLevel = 1, valX = 0, valY = 0, valX_ones = 0, valX_tens = 0, valY_ones = 0, valY_tens = 0, expectedAnswer = 0, currentInput = "", isAnimating = false;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBeep(frequency, type, duration) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            oscillator.type = type;
-            oscillator.frequency.value = frequency;
+            oscillator.type = type; oscillator.frequency.value = frequency;
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + duration);
+            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+            oscillator.start(); oscillator.stop(audioCtx.currentTime + duration);
         }
 
         const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
         function init() {
             for (let i = 1; i <= 9; i++) createBtn(i);
-            createBtn(0);
-            createBtn('クリア');
+            createBtn(0); createBtn('クリア');
         }
 
         function createBtn(val) {
             const btn = document.createElement('button');
-            btn.className = 'num-btn';
-            btn.textContent = val;
+            btn.className = 'num-btn'; btn.textContent = val;
             if (val === 'クリア') {
-                btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; 
-                btn.style.backgroundColor = '#6c757d';
-                btn.style.boxShadow = '0 4px 0 #495057';
+                btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; btn.style.backgroundColor = '#6c757d'; btn.style.boxShadow = '0 4px 0 #495057';
                 btn.onclick = () => { if(!isAnimating) resetInput(); };
-            } else {
-                btn.onclick = () => handleInput(val, btn);
-            }
+            } else btn.onclick = () => handleInput(val, btn);
             numpad.appendChild(btn);
         }
 
         function createCoin(val) {
             const div = document.createElement('div');
-            div.className = val === 1 ? 'coin coin-1' : 'coin coin-10';
-            div.textContent = val;
+            div.className = val === 1 ? 'coin coin-1' : 'coin coin-10'; div.textContent = val;
             return div;
         }
 
         function showLevelSelect() {
-            levelSelect.style.display = 'flex';
-            gameArea.style.visibility = 'hidden';
-            numpad.style.visibility = 'hidden';
-            backBtn.style.visibility = 'hidden';
-            resetInput();
+            levelSelect.style.display = 'flex'; gameArea.style.visibility = 'hidden'; numpad.style.visibility = 'hidden'; backBtn.style.visibility = 'hidden'; resetInput();
         }
 
         function startGame(level) {
-            currentLevel = level;
-            levelSelect.style.display = 'none';
-            gameArea.style.visibility = 'visible';
-            numpad.style.visibility = 'visible';
-            backBtn.style.visibility = 'visible';
-            
-            tensHoverArea.style.display = currentLevel === 1 ? 'none' : 'flex';
-            startNextRound();
+            currentLevel = level; levelSelect.style.display = 'none'; gameArea.style.visibility = 'visible'; numpad.style.visibility = 'visible'; backBtn.style.visibility = 'visible';
+            tensHoverArea.style.display = currentLevel === 1 ? 'none' : 'flex'; startNextRound();
         }
 
         function startNextRound() {
-            isAnimating = false;
-            resetInput();
-            onesTube.innerHTML = "";
-            tensTube.innerHTML = "";
-            onesHoverArea.innerHTML = "";
-            tensHoverArea.innerHTML = "";
-            overlay.style.opacity = "0";
+            isAnimating = false; resetInput();
+            onesTube.innerHTML = ""; tensTube.innerHTML = ""; onesHoverArea.innerHTML = ""; tensHoverArea.innerHTML = ""; overlay.style.opacity = "0";
 
-            if (currentLevel === 1) {
-                valX_ones = Math.floor(Math.random() * 4) + 6; 
-                const minY = 11 - valX_ones;
-                valY_ones = Math.floor(Math.random() * (10 - minY)) + minY;
-                valX_tens = 0; valY_tens = 0;
-            } else {
-                valX_ones = Math.floor(Math.random() * 4) + 6; 
-                const minY = 11 - valX_ones;
-                valY_ones = Math.floor(Math.random() * (10 - minY)) + minY;
-                
-                valX_tens = Math.floor(Math.random() * 4) + 1; 
-                valY_tens = Math.floor(Math.random() * (8 - valX_tens)) + 1; 
-            }
+            valX_ones = Math.floor(Math.random() * 4) + 6; 
+            const minY = 11 - valX_ones;
+            valY_ones = Math.floor(Math.random() * (10 - minY)) + minY;
+            
+            if (currentLevel === 1) { valX_tens = 0; valY_tens = 0; } 
+            else { valX_tens = Math.floor(Math.random() * 4) + 1; valY_tens = Math.floor(Math.random() * (8 - valX_tens)) + 1; }
 
-            valX = valX_tens * 10 + valX_ones;
-            valY = valY_tens * 10 + valY_ones;
-            expectedAnswer = valX + valY;
-
-            eqX.textContent = valX;
-            eqY.textContent = valY;
+            valX = valX_tens * 10 + valX_ones; valY = valY_tens * 10 + valY_ones;
+            expectedAnswer = valX + valY; eqX.textContent = valX; eqY.textContent = valY;
 
             for(let i=0; i<valX_tens; i++) tensTube.appendChild(createCoin(10));
             for(let i=0; i<valX_ones; i++) onesTube.appendChild(createCoin(1));
-
             for(let i=0; i<valY_tens; i++) tensHoverArea.appendChild(createCoin(10));
             for(let i=0; i<valY_ones; i++) onesHoverArea.appendChild(createCoin(1));
         }
 
-        function resetInput() {
-            currentInput = "";
-            eqAns.textContent = "";
-            cursor.style.display = "inline-block";
-        }
+        function resetInput() { currentInput = ""; eqAns.textContent = ""; cursor.style.display = "inline-block"; }
 
         function handleInput(num, btnElement) {
             if (isAnimating || currentInput.length >= expectedAnswer.toString().length) return;
-            
-            playBeep(800, 'sine', 0.1);
-            currentInput += num.toString();
-            eqAns.textContent = currentInput;
-
+            playBeep(800, 'sine', 0.1); currentInput += num.toString(); eqAns.textContent = currentInput;
             if (currentInput.length === expectedAnswer.toString().length) {
                 cursor.style.display = "none";
-                if (parseInt(currentInput) === expectedAnswer) {
-                    processCorrectAnswer();
-                } else {
-                    processWrongAnswer(btnElement);
+                if (parseInt(currentInput) === expectedAnswer) processCorrectAnswer();
+                else {
+                    playBeep(150, 'sawtooth', 0.3); btnElement.classList.add('shake');
+                    setTimeout(() => { btnElement.classList.remove('shake'); resetInput(); }, 400);
                 }
             }
         }
 
-        function processWrongAnswer(btnElement) {
-            playBeep(150, 'sawtooth', 0.3); 
-            btnElement.classList.add('shake');
-            setTimeout(() => {
-                btnElement.classList.remove('shake');
-                resetInput();
-            }, 400);
+        function spawnStars(cx, cy) {
+            for(let i=0; i<12; i++) {
+                const star = document.createElement('div');
+                star.textContent = '✨';
+                star.style.position = 'fixed'; star.style.left = `${cx}px`; star.style.top = `${cy}px`;
+                star.style.fontSize = '30px'; star.style.zIndex = '1001'; star.style.pointerEvents = 'none';
+                star.style.transform = 'translate(-50%, -50%)';
+                document.body.appendChild(star);
+
+                const angle = (i / 12) * Math.PI * 2;
+                const distance = 100 + Math.random() * 60;
+                const tx = Math.cos(angle) * distance; const ty = Math.sin(angle) * distance;
+
+                const anim = star.animate([
+                    { transform: `translate(-50%, -50%) scale(0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(1.5) rotate(180deg)`, opacity: 0 }
+                ], { duration: 1000 + Math.random()*500, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' });
+                anim.onfinish = () => star.remove();
+            }
         }
 
         async function processCorrectAnswer() {
             isAnimating = true; 
-            playBeep(1200, 'sine', 0.1); 
-            setTimeout(() => playBeep(1600, 'sine', 0.2), 100); 
+            playBeep(1200, 'sine', 0.1); setTimeout(() => playBeep(1600, 'sine', 0.2), 100); 
 
             const neededFor10 = 10 - valX_ones;
             const remainingOnes = valY_ones - neededFor10;
 
+            // 【ステップ1】一番上のコインから順に、完全な真横スライド
+            const coinsToMove = [];
             for(let i=0; i<neededFor10; i++) {
-                const coin = onesHoverArea.lastElementChild;
-                if(coin) {
-                    onesTube.appendChild(coin);
-                    coin.style.animation = 'none';
-                    void coin.offsetWidth; 
-                    coin.style.animation = 'jumpIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards';
-                    await sleep(300); 
-                }
+                coinsToMove.push(onesHoverArea.children[i]);
+            }
+
+            // 透明なスペーサーを入れて、残りのコインの位置を固定する
+            coinsToMove.forEach(coin => {
+                const spacer = document.createElement('div');
+                spacer.className = 'coin spacer';
+                spacer.style.visibility = 'hidden';
+                onesHoverArea.insertBefore(spacer, coin);
+            });
+
+            const firstRects = coinsToMove.map(coin => coin.getBoundingClientRect());
+
+            // チューブにアペンド（物理的に正しい高さを割り当てるため、逆順で挿入）
+            for(let i = neededFor10 - 1; i >= 0; i--) {
+                onesTube.appendChild(coinsToMove[i]);
+            }
+
+            const lastRects = coinsToMove.map(coin => coin.getBoundingClientRect());
+
+            // アニメーション用に初期位置へセット
+            coinsToMove.forEach((coin, i) => {
+                coin.style.transform = `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)`;
+            });
+
+            void onesTube.offsetWidth; // 描画のリフレッシュ（魔法の1行）
+
+            // 上から順番に（インデックス0から）アニメーションを実行
+            for(let i=0; i<neededFor10; i++) {
+                const coin = coinsToMove[i];
+                const deltaX = firstRects[i].left - lastRects[i].left;
+                const deltaY = firstRects[i].top - lastRects[i].top; // この値は必ず0（真横）になります
+
+                coin.animate([
+                    { transform: `translate(${deltaX}px, ${deltaY}px) scale(1.1)`, opacity: 0.5 },
+                    { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }
+                ], { duration: 300, easing: 'ease-in-out' });
+                
+                playBeep(1200 + i * 100, 'sine', 0.05); // ピッチが上がっていく
+                await sleep(300); 
+                coin.style.transform = 'translate(0px, 0px)'; // 終了位置にロック
             }
 
             await sleep(200);
 
+            // 【ステップ2】Y軸回転（コイントス）によるレベルアップ変身演出
             const onesCoins = Array.from(onesTube.querySelectorAll('.coin'));
-            playBeep(2000, 'square', 0.4); 
-            
-            onesCoins.forEach(c => {
-                c.style.animation = 'none';
-                void c.offsetWidth;
-                c.classList.add('glow-merge');
-            });
-            
+            onesCoins.forEach(c => c.classList.add('glow-merge'));
             await sleep(700); 
             onesTube.innerHTML = ""; 
 
-            const tenCoin = document.createElement('div');
-            tenCoin.className = 'coin coin-10';
-            tenCoin.textContent = '10';
-            tenCoin.style.animation = 'dropTen 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards';
-            tensTube.appendChild(tenCoin);
+            const dummyStart = createCoin(10); dummyStart.style.visibility = 'hidden'; onesTube.appendChild(dummyStart);
+            const startRect = dummyStart.getBoundingClientRect(); dummyStart.remove();
             
-            await sleep(500); 
+            const dummyTarget = createCoin(10); dummyTarget.style.visibility = 'hidden'; tensTube.appendChild(dummyTarget);
+            const targetRect = dummyTarget.getBoundingClientRect(); dummyTarget.remove();
 
-            for(let i=0; i<remainingOnes; i++) {
-                const coin = onesHoverArea.lastElementChild;
-                if(coin) {
-                    onesTube.appendChild(coin);
-                    coin.style.animation = 'none';
-                    void coin.offsetWidth;
-                    coin.style.animation = 'jumpIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards';
-                    await sleep(300);
-                }
-            }
+            const celebCoin = createCoin(10);
+            celebCoin.style.position = 'fixed'; celebCoin.style.left = '0px'; celebCoin.style.top = '0px'; celebCoin.style.zIndex = '1000';
+            document.body.appendChild(celebCoin);
+
+            playBeep(440, 'sine', 0.1); setTimeout(() => playBeep(554.37, 'sine', 0.1), 100);
+            setTimeout(() => playBeep(659.25, 'sine', 0.1), 200); setTimeout(() => playBeep(880, 'sine', 0.3), 300);
             
+            setTimeout(() => spawnStars(startRect.left + 20, startRect.top - 150), 600);
+
+            // ★変更：rotate() から rotateY() へ変更し、Y軸を中心に回転（コイントス）させる
+            const evolveAnim = celebCoin.animate([
+                { transform: `translate(${startRect.left}px, ${startRect.top}px) scale(0.5) rotateY(0deg)`, opacity: 0 },
+                { transform: `translate(${startRect.left}px, ${startRect.top - 150}px) scale(2.5) rotateY(360deg)`, opacity: 1, boxShadow: '0 0 50px #ffeb3b, 0 0 100px #ff9800', offset: 0.3 },
+                { transform: `translate(${startRect.left}px, ${startRect.top - 150}px) scale(2.5) rotateY(720deg)`, opacity: 1, boxShadow: '0 0 50px #ffeb3b, 0 0 100px #ff9800', offset: 0.7 },
+                { transform: `translate(${targetRect.left}px, ${targetRect.top}px) scale(1) rotateY(1080deg)`, opacity: 1, boxShadow: '0 3px 5px rgba(0,0,0,0.2)' }
+            ], { duration: 2000, easing: 'ease-in-out', fill: 'forwards' });
+
+            await evolveAnim.finished;
+            celebCoin.remove();
+            tensTube.appendChild(createCoin(10));
             await sleep(300);
 
-            if (currentLevel === 2) {
+            // 【ステップ3】残りのコインを「一斉に落としてから → 1つずつ横へスライド」
+            if (remainingOnes > 0) {
+                const moveData = [];
+                const coinsToDrop = Array.from(onesHoverArea.querySelectorAll('.coin:not(.spacer)')).reverse();
+                
+                for(let i=0; i<coinsToDrop.length; i++) {
+                    const coin = coinsToDrop[i];
+                    const firstRect = coin.getBoundingClientRect();
+                    onesTube.appendChild(coin);
+                    const lastRect = coin.getBoundingClientRect();
+                    moveData.push({
+                        coin: coin,
+                        deltaX: firstRect.left - lastRect.left,
+                        deltaY: firstRect.top - lastRect.top
+                    });
+                }
+
+                moveData.forEach(({ coin, deltaX, deltaY }) => {
+                    coin.animate([
+                        { transform: `translate(${deltaX}px, ${deltaY}px)` },
+                        { transform: `translate(${deltaX}px, 0px)` }
+                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
+                });
+                
+                setTimeout(() => playBeep(200, 'square', 0.1), 350);
+                await sleep(400);
+                await sleep(400); 
+
+                for (let i = 0; i < moveData.length; i++) {
+                    const { coin, deltaX } = moveData[i];
+                    coin.animate([
+                        { transform: `translate(${deltaX}px, 0px)` },
+                        { transform: `translate(0px, 0px)` }
+                    ], { duration: 250, easing: 'ease-out', fill: 'forwards' });
+                    
+                    playBeep(1000 + (i * 150), 'sine', 0.05);
+                    await sleep(250);
+                }
+                await sleep(300);
+            }
+
+            // 【ステップ4】10のホバリングコインの移動（レベル2のみ）
+            if (currentLevel === 2 && tensHoverArea.children.length > 0) {
+                const moveDataTens = [];
                 const tenHoverCoins = Array.from(tensHoverArea.children).reverse();
                 for(let i=0; i<tenHoverCoins.length; i++) {
                     const coin = tenHoverCoins[i];
+                    const firstRect = coin.getBoundingClientRect();
                     tensTube.appendChild(coin);
-                    coin.style.animation = 'none';
-                    void coin.offsetWidth;
-                    coin.style.animation = 'jumpIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards';
-                    await sleep(300);
+                    const lastRect = coin.getBoundingClientRect();
+                    moveDataTens.push({
+                        coin: coin, deltaX: firstRect.left - lastRect.left, deltaY: firstRect.top - lastRect.top
+                    });
+                }
+
+                moveDataTens.forEach(({ coin, deltaX, deltaY }) => {
+                    coin.animate([
+                        { transform: `translate(${deltaX}px, ${deltaY}px)` },
+                        { transform: `translate(${deltaX}px, 0px)` }
+                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
+                });
+                
+                setTimeout(() => playBeep(150, 'square', 0.1), 350);
+                await sleep(400);
+                await sleep(300);
+
+                for (let i = 0; i < moveDataTens.length; i++) {
+                    const { coin, deltaX } = moveDataTens[i];
+                    coin.animate([
+                        { transform: `translate(${deltaX}px, 0px)` },
+                        { transform: `translate(0px, 0px)` }
+                    ], { duration: 250, easing: 'ease-out', fill: 'forwards' });
+                    
+                    playBeep(800 + (i * 100), 'sine', 0.05);
+                    await sleep(250);
                 }
             }
 
+            // フィナーレ演出
             overlay.style.opacity = "1";
-            playBeep(523.25, 'sine', 0.1); 
-            setTimeout(() => playBeep(659.25, 'sine', 0.1), 100); 
-            setTimeout(() => playBeep(783.99, 'sine', 0.3), 200); 
+            playBeep(523.25, 'sine', 0.1); setTimeout(() => playBeep(659.25, 'sine', 0.1), 100); setTimeout(() => playBeep(783.99, 'sine', 0.3), 200); 
 
             await sleep(2000); 
             startNextRound(); 
