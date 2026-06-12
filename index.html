@@ -94,26 +94,23 @@
             align-items: end;
         }
 
-        /* 左辺 (X) のブロック */
         .board-left {
             display: grid;
             grid-template-columns: auto auto auto;
             grid-template-rows: auto auto;
             align-items: end;
-            gap: 10px 8px;
+            gap: 10px 8px; /* 10と1のタワーを極限まで密着 */
             justify-self: end;
         }
         .col-tens { grid-column: 1; grid-row: 1; }
         .col-ones { grid-column: 2; grid-row: 1; }
         .col-sub { grid-column: 3; grid-row: 1; }
-        .col-eq-x { grid-column: 1 / 3; grid-row: 2; justify-self: center; }
+        .col-eq-x { grid-column: 1 / 3; grid-row: 2; justify-self: center; } /* 10と1の中心に配置 */
 
-        /* 演算子のブロック */
         .board-center {
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
         }
 
-        /* 右辺 (Y) と 答え のブロック */
         .board-right {
             display: grid;
             grid-template-columns: auto auto auto;
@@ -127,7 +124,6 @@
         .col-eq-equals { grid-column: 2; grid-row: 2; }
         .col-eq-ans { grid-column: 3; grid-row: 2; }
 
-        /* 数式パーツの共通スタイル */
         .eq-part {
             font-size: 34px; font-weight: bold; color: #333;
             background: #fff; padding: 5px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -135,16 +131,15 @@
             transition: all 0.3s;
         }
         .eq-sign { background: none; box-shadow: none; padding: 0 5px; color: #777; }
-        
         .eq-active-subtraction { transform: scale(1.15); box-shadow: 0 0 15px rgba(220, 53, 69, 0.3) !important; color: #dc3545; }
 
         .cursor { border-bottom: 4px solid #007bff; width: 20px; display: inline-block; margin-left: 5px; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* タワー・チューブのスタイル */
+        /* タワー・チューブの共通スタイル */
         .tube-container { display: flex; flex-direction: column; align-items: center; }
         .tube-label { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; }
-        .tube-wrapper { position: relative; width: var(--tube-width); height: var(--tube-height); } /* 高さを担保 */
+        .tube-wrapper { position: relative; width: var(--tube-width); height: var(--tube-height); } /* 高さを固定し崩れを防止 */
 
         .tube {
             width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.6);
@@ -158,7 +153,7 @@
             width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; position: relative;
         }
-        #ghost-target-area { flex-direction: column-reverse; }
+        #ghost-target-area { flex-direction: column-reverse; pointer-events: none; }
 
         .answer-highlight-box {
             position: absolute; bottom: 0; left: 0; width: 100%;
@@ -181,17 +176,14 @@
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; font-size: calc(var(--coin-size) * 0.55);
             margin: var(--coin-margin) 0; box-shadow: 0 3px 5px rgba(0,0,0,0.2); z-index: 5; box-sizing: border-box; transform-style: preserve-3d;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
         }
         .coin-1 { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border: 2px solid #9e9e9e; color: #424242; }
         .coin-10 { background: radial-gradient(circle at 30% 30%, #ffcc80, #d84315); border: 2px solid #8d6e63; color: #fff; }
 
         .coin-ghost {
-            width: var(--coin-size); height: var(--coin-size); border-radius: 50%;
-            border: 2px dashed #dc3545; background-color: rgba(220, 53, 69, 0.05);
-            margin: var(--coin-margin) 0; box-shadow: none; z-index: 4;
-            display: flex; justify-content: center; align-items: center;
-            color: rgba(220, 53, 69, 0.4); font-weight: bold; font-size: calc(var(--coin-size) * 0.5);
-            transition: all 0.2s;
+            background: rgba(220, 53, 69, 0.05); border: 2px dashed #dc3545; color: rgba(220, 53, 69, 0.4);
+            box-shadow: none; font-size: calc(var(--coin-size) * 0.5); z-index: 4;
         }
 
         .swipeable { cursor: pointer; }
@@ -266,6 +258,7 @@
     <div id="success-overlay"></div>
 
     <div id="math-board">
+        <!-- 左辺 (X) ブロック -->
         <div class="board-left">
             <div class="tube-container col-tens">
                 <div class="tube-label">10の位</div>
@@ -293,16 +286,18 @@
             <div id="eq-x" class="eq-part col-eq-x"></div>
         </div>
 
+        <!-- 演算子ブロック -->
         <div class="board-center">
             <div id="eq-sign-op" class="eq-part eq-sign">+</div>
         </div>
 
+        <!-- 右辺 (Y) ブロック -->
         <div class="board-right">
             <div id="y-action-wrapper" class="tube-container col-target">
                 <div class="tube-label" style="visibility: hidden;">的</div>
                 <div class="tube-wrapper">
-                    <div id="ghost-target-area" class="action-tube"></div>
-                    <div id="add-hover-area" class="action-tube swipeable"></div>
+                    <div id="ghost-target-area" class="action-tube" style="display: none;"></div>
+                    <div id="add-hover-area" class="action-tube swipeable" style="display: none;"></div>
                 </div>
             </div>
             
@@ -386,7 +381,7 @@
         function startNextRound() {
             isAnimating = false; resetInput();
             onesTube.innerHTML = ""; tensTube.innerHTML = ""; addHoverArea.innerHTML = ""; subtractHoverArea.innerHTML = ""; ghostTargetArea.innerHTML = ""; overlay.style.opacity = "0";
-            eqAnsBox.style.opacity = "1";
+            eqAnsBox.style.opacity = "1"; addHoverArea.style.flexDirection = 'column'; subtractHoverArea.style.flexDirection = 'column';
             eqY.classList.remove('eq-active-subtraction'); clearAnswerHighlights();
 
             if (currentLevel === 1) {
@@ -409,6 +404,8 @@
 
                 for(let i=0; i<valX_tens; i++) tensTube.appendChild(createCoin(10));
                 for(let i=0; i<valX_ones; i++) onesTube.appendChild(createCoin(1));
+
+                for(let i=0; i<valY; i++) { ghostTargetArea.appendChild(createCoin(1)); }
                 subtractedCount = 0;
             }
 
@@ -559,10 +556,20 @@
 
             gameState = STATE_DECOMPOSE_10; subtractHoverArea.style.flexDirection = 'column'; 
             eqY.classList.add('eq-active-subtraction');
-            ghostTargetArea.innerHTML = "";
-            for (let i = 0; i < valY; i++) {
-                const ghost = document.createElement('div'); ghost.className = 'coin-ghost'; ghost.textContent = "−"; ghostTargetArea.appendChild(ghost);
-            }
+
+            const yCoins = Array.from(ghostTargetArea.children);
+            yCoins.forEach((coin, i) => {
+                setTimeout(() => {
+                    coin.className = 'coin coin-ghost'; 
+                    coin.textContent = "−";
+                    coin.animate([
+                        { transform: 'scale(1)', backgroundColor: '#fff', borderColor: '#9e9e9e', color: '#424242' },
+                        { transform: 'scale(1.2)', backgroundColor: 'rgba(220, 53, 69, 0.2)', borderColor: '#dc3545', color: '#dc3545', offset: 0.5 },
+                        { transform: 'scale(1)' } 
+                    ], { duration: 300, easing: 'ease-out' });
+                    playBeep(800 + i * 50, 'triangle', 0.05);
+                }, i * 40);
+            });
 
             for (let i = 0; i < 10; i++) {
                 const newCoin = createCoin(1); subtractHoverArea.appendChild(newCoin); const finalRect = newCoin.getBoundingClientRect();
