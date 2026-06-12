@@ -13,46 +13,38 @@
         :root {
             --coin-size: 32px; --coin-margin: 2px; --slot-size: 36px; 
             --tube-height: 360px; --tube-width: 50px; --hover-offset: 65px;
-            --game-gap: 80px; --btn-height: 55px;
+            --btn-height: 55px;
         }
 
         @media (min-height: 950px) and (min-width: 700px) {
             :root {
                 --coin-size: 46px; --coin-margin: 3px; --slot-size: 52px;
-                --tube-height: 520px; --tube-width: 70px; --hover-offset: 90px;
-                --game-gap: 120px; --btn-height: 75px;
+                --tube-height: 520px; --tube-width: 70px;
+                --btn-height: 75px;
             }
-            #equation {
-                font-size: 46px; height: 70px; padding: 10px 40px;
-            }
-            #numpad {
-                max-width: 450px; gap: 15px;
-            }
-            .tube-scale {
-                left: -38px;
-            }
-            .scale-top, .scale-mid {
-                font-size: 18px;
-            }
-            #guidance-hand {
-                font-size: 42px;
-            }
+            #numpad { max-width: 450px; gap: 15px; }
+            .tube-scale { left: -38px; }
+            .scale-top, .scale-mid { font-size: 18px; }
+            #guidance-hand { font-size: 42px; }
+            .eq-part { font-size: 46px !important; height: 70px !important; padding: 10px 25px !important; }
         }
 
         @media (max-height: 800px) {
             :root {
                 --coin-size: 26px; --coin-margin: 2px; --slot-size: 30px;
-                --tube-height: 300px; --tube-width: 40px; --hover-offset: 50px;
-                --game-gap: 60px; --btn-height: 45px;
+                --tube-height: 300px; --tube-width: 40px;
+                --btn-height: 45px;
             }
+            .eq-part { font-size: 28px !important; height: 45px !important; padding: 5px 15px !important; }
         }
 
         @media (max-height: 650px) {
             :root {
                 --coin-size: 20px; --coin-margin: 1px; --slot-size: 22px;
-                --tube-height: 220px; --tube-width: 32px; --hover-offset: 40px;
-                --game-gap: 50px; --btn-height: 40px;
+                --tube-height: 220px; --tube-width: 32px;
+                --btn-height: 40px;
             }
+            .eq-part { font-size: 24px !important; height: 40px !important; padding: 5px 12px !important; }
         }
 
         body {
@@ -90,33 +82,73 @@
         .level-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #0056b3; }
         .level-btn.lvl2 { background-color: #28a745; box-shadow: 0 6px 0 #1e7e34; }
 
-        #equation {
-            font-size: clamp(24px, 7vw, 40px); font-weight: bold; color: #333;
-            margin: 10px 0 15px 0; height: 50px; display: flex; align-items: center; justify-content: center;
-            background: #fff; padding: 5px 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
-            transition: transform 0.3s, box-shadow 0.3s;
-            width: 100%; max-width: 320px; box-sizing: border-box;
-        }
-        @media (min-height: 950px) and (min-width: 700px) {
-            #equation { max-width: 450px; }
-        }
-        
-        .eq-active-subtraction {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(220, 53, 69, 0.3) !important;
-        }
-        .eq-highlight-y {
-            color: #dc3545;
-            transition: all 0.3s;
-            display: inline-block;
+        /* =========================================
+           究極のシンクロ・レイアウト (CSS Grid)
+           ========================================= */
+        #math-board {
+            display: grid;
+            /* 左右の幅を1frで均等にし、中央の演算子をテンキー中央と一致させる */
+            grid-template-columns: 1fr auto 1fr; 
+            gap: clamp(15px, 4vw, 40px); /* 分解エリアと的エリアの間のフリック用余白 */
+            width: 100%; max-width: 900px;
+            margin-bottom: 20px; visibility: hidden; position: relative;
+            align-items: end;
         }
 
-        #game-area {
-            display: flex; justify-content: center; gap: var(--game-gap); 
-            margin-bottom: 10px; visibility: hidden; position: relative;
+        /* 左辺 (X) のブロック */
+        .board-left {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            grid-template-rows: auto auto;
+            align-items: end;
+            gap: 10px 8px; /* 列同士は8pxの最小限の隙間で密着 */
+            justify-self: end; /* 中央の演算子に寄せてバランスを取る */
         }
+        /* 10のタワー */
+        .col-tens { grid-column: 1; grid-row: 1; }
+        /* 1のタワー */
+        .col-ones { grid-column: 2; grid-row: 1; }
+        /* 分解ホバーエリア */
+        .col-sub { grid-column: 3; grid-row: 1; }
+        /* 数式X（10と1のタワーの真下に配置） */
+        .col-eq-x { grid-column: 1 / 3; grid-row: 2; justify-self: center; }
+
+        /* 演算子のブロック */
+        .board-center {
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+        }
+
+        /* 右辺 (Y) と 答え のブロック */
+        .board-right {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            grid-template-rows: auto auto;
+            align-items: end;
+            gap: 10px 15px;
+            justify-self: start; /* 中央の演算子に寄せる */
+        }
+        .col-target { grid-column: 1; grid-row: 1; position: relative; }
+        .col-eq-y { grid-column: 1; grid-row: 2; justify-self: center; }
+        .col-eq-equals { grid-column: 2; grid-row: 2; }
+        .col-eq-ans { grid-column: 3; grid-row: 2; }
+
+        /* 数式パーツの共通スタイル */
+        .eq-part {
+            font-size: 34px; font-weight: bold; color: #333;
+            background: #fff; padding: 5px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center; height: 50px; box-sizing: border-box;
+            transition: all 0.3s;
+        }
+        .eq-sign { background: none; box-shadow: none; padding: 0 5px; color: #777; }
+        
+        .eq-active-subtraction { transform: scale(1.15); box-shadow: 0 0 15px rgba(220, 53, 69, 0.3) !important; color: #dc3545; }
+
+        .cursor { border-bottom: 4px solid #007bff; width: 20px; display: inline-block; margin-left: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* タワー・チューブのスタイル */
         .tube-container { display: flex; flex-direction: column; align-items: center; }
-        .tube-label { font-size: 16px; font-weight: bold; color: #555; margin-bottom: 5px; }
+        .tube-label { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; }
         .tube-wrapper { position: relative; }
 
         .tube {
@@ -125,30 +157,18 @@
             border: 4px solid #b0bec5; border-top: none; border-radius: 0 0 15px 15px;
             display: flex; flex-direction: column-reverse; align-items: center; box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05); position: relative;
         }
-        
-        .tube::after { 
-            content: ''; 
-            position: absolute; 
-            bottom: calc(var(--slot-size) * 5 - 2px); 
-            left: 0; 
-            width: 100%; 
-            height: 4px; 
-            background-color: #b0bec5; 
-            z-index: 1; 
-        }
+        .tube::after { content: ''; position: absolute; bottom: calc(var(--slot-size) * 5 - 2px); left: 0; width: 100%; height: 4px; background-color: #b0bec5; z-index: 1; }
 
-        /* 💡 改善：コインがある部分だけをピッタリ囲む動的ハイライト枠 */
+        .action-tube {
+            width: var(--tube-width); height: var(--tube-height);
+            display: flex; flex-direction: column; align-items: center; position: relative;
+        }
+        #ghost-target-area { flex-direction: column-reverse; } /* 的は下から積む */
+
         .answer-highlight-box {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            border: 3px solid #ffca28; /* ゴールドの枠線 */
-            border-radius: 8px 8px 12px 12px;
-            box-sizing: border-box;
-            background-color: rgba(255, 202, 40, 0.15); /* 枠の内部もうっすら光らせる */
-            pointer-events: none;
-            z-index: 15;
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            border: 3px solid #ffca28; border-radius: 8px 8px 12px 12px; box-sizing: border-box;
+            background-color: rgba(255, 202, 40, 0.15); pointer-events: none; z-index: 15;
             animation: boxPulse 1.5s infinite;
         }
         @keyframes boxPulse {
@@ -157,49 +177,9 @@
             100% { box-shadow: 0 0 5px rgba(255, 202, 40, 0.4), inset 0 0 5px rgba(255, 202, 40, 0.4); opacity: 0.7; }
         }
 
-        .tube-scale {
-            position: absolute;
-            left: -28px;
-            top: 0;
-            height: var(--tube-height);
-            pointer-events: none;
-            z-index: 20;
-        }
-        .scale-top { 
-            position: absolute; 
-            top: calc(var(--slot-size) * 0.5 - 9px); 
-            right: 0; 
-            font-size: clamp(13px, 3.5vw, 16px); 
-            font-weight: bold; 
-            color: #9e9e9e; 
-        }
-        .scale-mid { 
-            position: absolute; 
-            bottom: calc(var(--slot-size) * 5 - 9px); 
-            right: 0; 
-            font-size: clamp(13px, 3.5vw, 16px); 
-            font-weight: bold; 
-            color: #9e9e9e; 
-        }
-
-        .hover-area {
-            position: absolute; top: 0; left: var(--hover-offset); 
-            width: var(--tube-width); height: var(--tube-height); 
-            display: flex; flex-direction: column; align-items: center; z-index: 10;
-        }
-
-        #ghost-target-area {
-            position: absolute;
-            top: 0;
-            left: calc(var(--hover-offset) + var(--tube-width) + 10px);
-            width: var(--tube-width);
-            height: var(--tube-height);
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            pointer-events: none;
-            z-index: 8;
-        }
+        .tube-scale { position: absolute; left: -25px; top: 0; height: var(--tube-height); pointer-events: none; z-index: 20; }
+        .scale-top { position: absolute; top: calc(var(--slot-size) * 0.5 - 9px); right: 0; font-size: clamp(11px, 3vw, 14px); font-weight: bold; color: #9e9e9e; }
+        .scale-mid { position: absolute; bottom: calc(var(--slot-size) * 5 - 9px); right: 0; font-size: clamp(11px, 3vw, 14px); font-weight: bold; color: #9e9e9e; }
 
         .coin {
             width: var(--coin-size); height: var(--coin-size); border-radius: 50%;
@@ -232,24 +212,22 @@
             80% { transform: translate(-40px, 0) scale(0.9); opacity: 1; }
             100% { transform: translate(-40px, 0) scale(1); opacity: 0; }
         }
-        
         @keyframes swipeRightAnimation {
             0% { transform: translate(0, 0) scale(1); opacity: 0; }
             20% { transform: translate(0, 0) scale(0.9); opacity: 1; }
             80% { transform: translate(40px, 0) scale(0.9); opacity: 1; }
             100% { transform: translate(40px, 0) scale(1); opacity: 0; }
         }
-        
-        @keyframes flickAnimation {
+        @keyframes flickRightAnimation {
             0% { transform: translate(0, 0) scale(1); opacity: 0; }
             20% { transform: translate(0, 0) scale(0.9); opacity: 1; }
-            80% { transform: translate(50px, 0px) scale(0.9); opacity: 1; }
-            100% { transform: translate(50px, 0px) scale(1); opacity: 0; }
+            80% { transform: translate(60px, 0px) scale(0.9); opacity: 1; }
+            100% { transform: translate(60px, 0px) scale(1); opacity: 0; }
         }
 
         #numpad {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 320px; visibility: hidden;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s; margin-top: 10px;
         }
         .numpad-disabled { opacity: 0.3; pointer-events: none; }
 
@@ -263,18 +241,7 @@
         @keyframes mergeAnim { 0% { box-shadow: 0 0 10px #ffeb3b; } 40% { box-shadow: 0 0 30px #ffeb3b; transform: scale(1.1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
         
         .charge-shake { animation: chargeShakeAnim 0.5s linear infinite; }
-        @keyframes chargeShakeAnim {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-3px); }
-            40%, 80% { transform: translateX(3px); }
-        }
-
-        .flick-out-to-target { animation: flickTargetAnim 0.25s ease-in forwards; pointer-events: none; }
-        @keyframes flickTargetAnim {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            50% { transform: translate(30px, 0px) scale(1.1); opacity: 0.8; }
-            100% { transform: translate(50px, 0px) scale(0); opacity: 0; }
-        }
+        @keyframes chargeShakeAnim { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
 
         .shake { animation: mildShake 0.4s ease-in-out; background-color: #dc3545 !important; box-shadow: 0 4px 0 #a71d2a !important; }
         @keyframes mildShake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
@@ -303,44 +270,61 @@
 
     <div id="success-overlay"></div>
 
-    <div id="game-area">
-        <div class="tube-container">
-            <div class="tube-label">10の部屋</div>
-            <div class="tube-wrapper">
-                <div class="tube-scale">
-                    <span class="scale-top">100</span>
-                    <span class="scale-mid">50</span>
+    <div id="math-board">
+        <div class="board-left">
+            <div class="tube-container col-tens">
+                <div class="tube-label">10の位</div>
+                <div class="tube-wrapper">
+                    <div class="tube-scale"><span class="scale-top">100</span><span class="scale-mid">50</span></div>
+                    <div id="tens-tube" class="tube swipeable"></div>
                 </div>
-                <div id="tens-tube" class="tube swipeable"></div>
-                <div id="tens-hover-area" class="hover-area swipeable"></div>
             </div>
-        </div>
-        <div class="tube-container">
-            <div class="tube-label">1の部屋</div>
-            <div class="tube-wrapper">
-                <div class="tube-scale">
-                    <span class="scale-top">10</span>
-                    <span class="scale-mid">5</span>
+            
+            <div class="tube-container col-ones">
+                <div class="tube-label">1の位</div>
+                <div class="tube-wrapper">
+                    <div class="tube-scale"><span class="scale-top">10</span><span class="scale-mid">5</span></div>
+                    <div id="ones-tube" class="tube swipeable"></div>
                 </div>
-                <div id="ones-tube" class="tube swipeable"></div>
-                <div id="ones-hover-area" class="hover-area swipeable"></div>
-                <div id="ghost-target-area"></div>
             </div>
-        </div>
-        <div id="guidance-hand">👈</div>
-    </div>
+            
+            <div id="subtract-wrapper" class="tube-container col-sub" style="display: none;">
+                <div class="tube-label" style="visibility: hidden;">分解</div>
+                <div id="subtract-hover-area" class="action-tube swipeable"></div>
+            </div>
 
-    <div id="equation">
-        <span id="eq-x"></span> <span id="eq-sign">+</span> <span id="eq-y"></span> = <span id="eq-ans"></span><span class="cursor" id="cursor"></span>
+            <div id="eq-x" class="eq-part col-eq-x"></div>
+        </div>
+
+        <div class="board-center">
+            <div id="eq-sign-op" class="eq-part eq-sign">+</div>
+        </div>
+
+        <div class="board-right">
+            <div class="tube-container col-target">
+                <div class="tube-label" style="visibility: hidden;">的</div>
+                <div id="ghost-target-area" class="action-tube"></div>
+                <div id="add-hover-area" class="action-tube swipeable" style="position: absolute; top: 0; left: 0;"></div>
+            </div>
+            
+            <div id="eq-y" class="eq-part col-eq-y"></div>
+            <div id="eq-sign-equals" class="eq-part eq-sign col-eq-equals">=</div>
+            <div id="eq-ans-box" class="eq-part col-eq-ans">
+                <span id="eq-ans"></span><span class="cursor" id="cursor"></span>
+            </div>
+        </div>
+        
+        <div id="guidance-hand">👈</div>
     </div>
 
     <div id="numpad"></div>
 
     <script>
-        const levelSelect = document.getElementById('level-select-overlay'), gameArea = document.getElementById('game-area'), numpad = document.getElementById('numpad');
+        const levelSelect = document.getElementById('level-select-overlay'), mathBoard = document.getElementById('math-board'), numpad = document.getElementById('numpad');
         const headerControls = document.getElementById('header-controls'), guideToggle = document.getElementById('guide-toggle'), guideHand = document.getElementById('guidance-hand');
-        const equationBox = document.getElementById('equation'), eqX = document.getElementById('eq-x'), eqSign = document.getElementById('eq-sign'), eqY = document.getElementById('eq-y'), eqAns = document.getElementById('eq-ans'), cursor = document.getElementById('cursor');
-        const onesTube = document.getElementById('ones-tube'), tensTube = document.getElementById('tens-tube'), onesHoverArea = document.getElementById('ones-hover-area'), tensHoverArea = document.getElementById('tens-hover-area'), ghostTargetArea = document.getElementById('ghost-target-area'), overlay = document.getElementById('success-overlay');
+        const eqX = document.getElementById('eq-x'), eqSignOp = document.getElementById('eq-sign-op'), eqY = document.getElementById('eq-y'), eqAns = document.getElementById('eq-ans'), cursor = document.getElementById('cursor'), eqAnsBox = document.getElementById('eq-ans-box');
+        const onesTube = document.getElementById('ones-tube'), tensTube = document.getElementById('tens-tube'), addHoverArea = document.getElementById('add-hover-area');
+        const subtractWrapper = document.getElementById('subtract-wrapper'), subtractHoverArea = document.getElementById('subtract-hover-area'), ghostTargetArea = document.getElementById('ghost-target-area'), overlay = document.getElementById('success-overlay');
 
         let currentLevel = 1, valX = 0, valY = 0, valX_ones = 0, valX_tens = 0, valY_ones = 0, expectedAnswer = 0, currentInput = "";
         let isAnimating = false;
@@ -354,16 +338,12 @@
         const STATE_SUBTRACT_ONES = 7; 
         
         let gameState = STATE_MAKE_10;
-        let neededFor10 = 0;
-        let swipedCount = 0;
-        let remainingSwipedCount = 0;
-        let subtractedCount = 0;
+        let neededFor10 = 0, swipedCount = 0, remainingSwipedCount = 0, subtractedCount = 0;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBeep(frequency, type, duration) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+            const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             oscillator.type = type; oscillator.frequency.value = frequency;
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
@@ -380,8 +360,7 @@
         }
 
         function createBtn(val) {
-            const btn = document.createElement('button');
-            btn.className = 'num-btn'; btn.textContent = val;
+            const btn = document.createElement('button'); btn.className = 'num-btn'; btn.textContent = val;
             if (val === 'クリア') {
                 btn.style.fontSize = 'clamp(14px, 4vw, 20px)'; btn.style.backgroundColor = '#6c757d'; btn.style.boxShadow = '0 4px 0 #495057';
                 btn.onclick = () => { if(!isAnimating && gameState === STATE_INPUT_ANSWER) resetInput(); };
@@ -396,251 +375,146 @@
         }
 
         function showLevelSelect() {
-            levelSelect.style.display = 'flex'; gameArea.style.visibility = 'hidden'; numpad.style.visibility = 'hidden'; headerControls.style.visibility = 'hidden'; resetInput();
-            guideHand.style.display = 'none';
-            equationBox.classList.remove('eq-active-subtraction');
-            eqY.classList.remove('eq-highlight-y');
-            clearAnswerHighlights();
+            levelSelect.style.display = 'flex'; mathBoard.style.visibility = 'hidden'; numpad.style.visibility = 'hidden'; headerControls.style.visibility = 'hidden'; resetInput();
+            guideHand.style.display = 'none'; eqY.classList.remove('eq-active-subtraction'); clearAnswerHighlights();
         }
 
         function startGame(level) {
-            currentLevel = level; levelSelect.style.display = 'none'; gameArea.style.visibility = 'visible'; numpad.style.visibility = 'visible'; headerControls.style.visibility = 'visible';
+            currentLevel = level; levelSelect.style.display = 'none'; mathBoard.style.visibility = 'visible'; numpad.style.visibility = 'visible'; headerControls.style.visibility = 'visible';
             startNextRound();
         }
 
         function startNextRound() {
             isAnimating = false; resetInput();
-            onesTube.innerHTML = ""; tensTube.innerHTML = ""; onesHoverArea.innerHTML = ""; tensHoverArea.innerHTML = ""; ghostTargetArea.innerHTML = ""; overlay.style.opacity = "0";
-            eqAns.style.opacity = "1";
-            onesHoverArea.style.flexDirection = 'column'; tensHoverArea.style.flexDirection = 'column';
-            equationBox.classList.remove('eq-active-subtraction');
-            eqY.classList.remove('eq-highlight-y');
-            clearAnswerHighlights();
+            onesTube.innerHTML = ""; tensTube.innerHTML = ""; addHoverArea.innerHTML = ""; subtractHoverArea.innerHTML = ""; ghostTargetArea.innerHTML = ""; overlay.style.opacity = "0";
+            eqAnsBox.style.opacity = "1"; addHoverArea.style.flexDirection = 'column'; subtractHoverArea.style.flexDirection = 'column';
+            eqY.classList.remove('eq-active-subtraction'); clearAnswerHighlights();
 
             if (currentLevel === 1) {
-                gameState = STATE_MAKE_10;
-                eqSign.textContent = "+";
-                tensHoverArea.style.display = 'none';
-                onesHoverArea.style.display = 'flex';
+                gameState = STATE_MAKE_10; eqSignOp.textContent = "+";
+                subtractWrapper.style.display = 'none'; addHoverArea.style.display = 'flex'; ghostTargetArea.style.display = 'none';
 
-                valX_ones = Math.floor(Math.random() * 4) + 6; 
-                const minY = 11 - valX_ones;
-                valY_ones = Math.floor(Math.random() * (10 - minY)) + minY;
-                valX_tens = 0;
-
-                valX = valX_ones; valY = valY_ones;
-                expectedAnswer = valX + valY;
+                valX_ones = Math.floor(Math.random() * 4) + 6; const minY = 11 - valX_ones; valY_ones = Math.floor(Math.random() * (10 - minY)) + minY; valX_tens = 0;
+                valX = valX_ones; valY = valY_ones; expectedAnswer = valX + valY;
 
                 for(let i=0; i<valX_ones; i++) onesTube.appendChild(createCoin(1));
-                for(let i=0; i<valY_ones; i++) onesHoverArea.appendChild(createCoin(1));
-
-                neededFor10 = 10 - valX_ones;
-                swipedCount = 0; remainingSwipedCount = 0;
+                for(let i=0; i<valY_ones; i++) addHoverArea.appendChild(createCoin(1));
+                neededFor10 = 10 - valX_ones; swipedCount = 0; remainingSwipedCount = 0;
 
             } else if (currentLevel === 3) {
-                gameState = STATE_BORROW_10;
-                eqSign.textContent = "−";
-                tensHoverArea.style.display = 'none';
-                onesHoverArea.style.display = 'flex'; 
+                gameState = STATE_BORROW_10; eqSignOp.textContent = "−";
+                subtractWrapper.style.display = 'flex'; addHoverArea.style.display = 'none'; ghostTargetArea.style.display = 'flex';
 
-                valX_tens = 1;
-                valX_ones = Math.floor(Math.random() * 4) + 1; 
-                valY = Math.floor(Math.random() * 5) + 5;       
-
-                valX = valX_tens * 10 + valX_ones;
-                expectedAnswer = valX - valY;
+                valX_tens = 1; valX_ones = Math.floor(Math.random() * 4) + 1; valY = Math.floor(Math.random() * 5) + 5;       
+                valX = valX_tens * 10 + valX_ones; expectedAnswer = valX - valY;
 
                 for(let i=0; i<valX_tens; i++) tensTube.appendChild(createCoin(10));
                 for(let i=0; i<valX_ones; i++) onesTube.appendChild(createCoin(1));
-
                 subtractedCount = 0;
             }
 
-            eqX.textContent = valX; eqY.textContent = valY;
-            numpad.classList.add('numpad-disabled');
+            eqX.textContent = valX; eqY.textContent = valY; numpad.classList.add('numpad-disabled');
             updateGuidance();
         }
 
         function updateGuidance() {
-            if (!guideToggle.checked || gameState === STATE_INPUT_ANSWER || isAnimating) {
-                guideHand.style.display = 'none';
-                return;
-            }
-            guideHand.style.display = 'block';
-            guideHand.style.animation = 'none'; 
-            void guideHand.offsetWidth; 
+            if (!guideToggle.checked || gameState === STATE_INPUT_ANSWER || isAnimating) { guideHand.style.display = 'none'; return; }
+            guideHand.style.display = 'block'; guideHand.style.animation = 'none'; void guideHand.offsetWidth; 
 
-            let targetElement = null;
-            let isRightHandDirection = false; 
-            let isFlickGuidance = false;
+            let targetElement = null; let animType = 'swipeAnimation'; let offsetX = 20;
 
             if (gameState === STATE_MAKE_10) {
-                targetElement = onesHoverArea.children[swipedCount];
-                guideHand.textContent = '👈';
+                targetElement = addHoverArea.children[swipedCount]; guideHand.textContent = '👈';
             } else if (gameState === STATE_EVOLVE_10) {
-                targetElement = onesTube.lastElementChild; 
-                guideHand.textContent = '👈';
+                targetElement = onesTube.lastElementChild; guideHand.textContent = '👈';
             } else if (gameState === STATE_MOVE_REMAINING) {
-                targetElement = onesHoverArea.lastElementChild; 
-                guideHand.textContent = '👈';
+                targetElement = addHoverArea.lastElementChild; guideHand.textContent = '👈';
             } else if (gameState === STATE_BORROW_10) {
-                targetElement = tensTube.lastElementChild;
-                guideHand.textContent = '👉';
-                isRightHandDirection = true;
+                targetElement = tensTube.lastElementChild; guideHand.textContent = '👉'; animType = 'swipeRightAnimation'; offsetX = -35;
             } else if (gameState === STATE_SUBTRACT_ONES) {
-                targetElement = onesHoverArea.lastElementChild;
-                isFlickGuidance = true;
-                guideHand.textContent = '👉';
-                isRightHandDirection = true;
+                targetElement = subtractHoverArea.lastElementChild; guideHand.textContent = '👉'; animType = 'flickRightAnimation'; offsetX = -35;
             }
 
             if (targetElement) {
-                const rect = targetElement.getBoundingClientRect();
-                const gameAreaRect = gameArea.getBoundingClientRect();
-                const coinWidth = rect.width;
-                
-                if (isRightHandDirection) {
-                    guideHand.style.left = `${rect.left - gameAreaRect.left - (coinWidth * 0.75)}px`;
-                } else {
-                    guideHand.style.left = `${rect.left - gameAreaRect.left + (coinWidth * 0.6)}px`;
-                }
-                
-                guideHand.style.top = `${rect.top - gameAreaRect.top + (rect.height * 0.1)}px`;
-                
-                if (isFlickGuidance) {
-                    guideHand.style.animation = 'flickAnimation 1.5s infinite';
-                } else if (gameState === STATE_BORROW_10) {
-                    guideHand.style.animation = 'swipeRightAnimation 1.5s infinite';
-                } else {
-                    guideHand.style.animation = 'swipeAnimation 1.5s infinite';
-                }
-            } else {
-                guideHand.style.display = 'none';
-            }
+                const rect = targetElement.getBoundingClientRect(); const boardRect = mathBoard.getBoundingClientRect();
+                guideHand.style.left = `${rect.left - boardRect.left + offsetX}px`;
+                guideHand.style.top = `${rect.top - boardRect.top + (rect.height * 0.1)}px`;
+                guideHand.style.animation = `${animType} 1.5s infinite`;
+            } else { guideHand.style.display = 'none'; }
         }
 
         function setupSwipeEvents() {
-            let onesHoverStartX = 0;
-            onesHoverArea.addEventListener('touchstart', e => { onesHoverStartX = e.changedTouches[0].screenX; }, {passive: true});
-            onesHoverArea.addEventListener('touchend', e => {
+            let addHoverStartX = 0;
+            addHoverArea.addEventListener('touchstart', e => { addHoverStartX = e.changedTouches[0].screenX; }, {passive: true});
+            addHoverArea.addEventListener('touchend', e => {
                 if (isAnimating) return;
-                const diffX = e.changedTouches[0].screenX - onesHoverStartX;
-                
-                if ((gameState === STATE_MAKE_10 || gameState === STATE_MOVE_REMAINING) && diffX < -20) {
-                    handleOnesHoverSwipe();
-                } else if (gameState === STATE_SUBTRACT_ONES) {
-                    if (diffX > 20) handleOnesHoverFlick();
-                }
+                if ((gameState === STATE_MAKE_10 || gameState === STATE_MOVE_REMAINING) && (e.changedTouches[0].screenX - addHoverStartX < -20)) handleAddHoverSwipe();
             });
-            onesHoverArea.addEventListener('click', () => { 
-                if (isAnimating) return;
-                if (gameState === STATE_MAKE_10 || gameState === STATE_MOVE_REMAINING) handleOnesHoverSwipe(); 
-                else if (gameState === STATE_SUBTRACT_ONES) handleOnesHoverFlick();
+            addHoverArea.addEventListener('click', () => { if (!isAnimating && (gameState === STATE_MAKE_10 || gameState === STATE_MOVE_REMAINING)) handleAddHoverSwipe(); });
+
+            let subHoverStartX = 0;
+            subtractHoverArea.addEventListener('touchstart', e => { subHoverStartX = e.changedTouches[0].screenX; }, {passive: true});
+            subtractHoverArea.addEventListener('touchend', e => {
+                if (isAnimating || gameState !== STATE_SUBTRACT_ONES) return;
+                if (e.changedTouches[0].screenX - subHoverStartX > 20) handleSubHoverFlick();
             });
+            subtractHoverArea.addEventListener('click', () => { if (!isAnimating && gameState === STATE_SUBTRACT_ONES) handleSubHoverFlick(); });
 
             let onesTubeStartX = 0;
             onesTube.addEventListener('touchstart', e => { onesTubeStartX = e.changedTouches[0].screenX; }, {passive: true});
             onesTube.addEventListener('touchend', e => {
                 if (isAnimating) return;
-                const diffX = e.changedTouches[0].screenX - onesTubeStartX;
-                if (gameState === STATE_EVOLVE_10 && diffX < -20) {
-                    handleOnesTubeSwipe();
-                }
+                if (gameState === STATE_EVOLVE_10 && (e.changedTouches[0].screenX - onesTubeStartX < -20)) handleOnesTubeSwipe();
             });
-            onesTube.addEventListener('click', () => { 
-                if (isAnimating) return;
-                if (gameState === STATE_EVOLVE_10) handleOnesTubeSwipe();
-            });
+            onesTube.addEventListener('click', () => { if (!isAnimating && gameState === STATE_EVOLVE_10) handleOnesTubeSwipe(); });
 
             let tensTubeStartX = 0;
             tensTube.addEventListener('touchstart', e => { tensTubeStartX = e.changedTouches[0].screenX; }, {passive: true});
             tensTube.addEventListener('touchend', e => {
                 if (isAnimating || gameState !== STATE_BORROW_10) return;
-                const diffX = e.changedTouches[0].screenX - tensTubeStartX;
-                if (diffX > 20) handleBorrow10();
+                if (e.changedTouches[0].screenX - tensTubeStartX > 20) handleBorrow10();
             });
-            tensTube.addEventListener('click', () => {
-                if (!isAnimating && gameState === STATE_BORROW_10) handleBorrow10();
-            });
+            tensTube.addEventListener('click', () => { if (!isAnimating && gameState === STATE_BORROW_10) handleBorrow10(); });
         }
 
-        async function handleOnesHoverSwipe() {
+        async function handleAddHoverSwipe() {
             if (gameState === STATE_MAKE_10 && swipedCount < neededFor10) {
                 isAnimating = true; guideHand.style.display = 'none';
-                
-                const coin = onesHoverArea.children[swipedCount];
+                const coin = addHoverArea.children[swipedCount];
                 if (coin) {
-                    const spacer = document.createElement('div');
-                    spacer.className = 'coin spacer'; spacer.style.visibility = 'hidden';
-                    onesHoverArea.insertBefore(spacer, coin);
-
-                    const firstRect = coin.getBoundingClientRect(); onesTube.appendChild(coin);
-                    const lastRect = coin.getBoundingClientRect();
-
-                    coin.animate([
-                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px) scale(1.1)`, opacity: 0.5 },
-                        { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }
-                    ], { duration: 200, easing: 'ease-out' });
-
-                    playBeep(1200 + swipedCount * 100, 'sine', 0.05);
-                    swipedCount++;
-                    await sleep(200);
+                    const spacer = document.createElement('div'); spacer.className = 'coin spacer'; spacer.style.visibility = 'hidden';
+                    addHoverArea.insertBefore(spacer, coin);
+                    const firstRect = coin.getBoundingClientRect(); onesTube.appendChild(coin); const lastRect = coin.getBoundingClientRect();
+                    coin.animate([{ transform: `translate(${firstRect.left - lastRect.left}px, ${firstRect.top - lastRect.top}px) scale(1.1)`, opacity: 0.5 }, { transform: `translate(0px, 0px) scale(1)`, opacity: 1 }], { duration: 250, easing: 'ease-out' });
+                    playBeep(1200 + swipedCount * 100, 'sine', 0.05); swipedCount++; await sleep(250);
                 }
-
-                if (swipedCount === neededFor10) {
-                    gameState = STATE_EVOLVE_10;
-                }
-                isAnimating = false;
-                updateGuidance();
-
+                if (swipedCount === neededFor10) gameState = STATE_EVOLVE_10;
+                isAnimating = false; updateGuidance();
             } else if (gameState === STATE_MOVE_REMAINING) {
                 isAnimating = true; guideHand.style.display = 'none';
-                
-                const coin = onesHoverArea.lastElementChild;
+                const coin = addHoverArea.lastElementChild;
                 if (coin) {
-                    const firstRect = coin.getBoundingClientRect(); onesTube.appendChild(coin);
-                    const lastRect = coin.getBoundingClientRect();
-
-                    coin.animate([
-                        { transform: `translate(${firstRect.left - lastRect.left}px, 0px)` },
-                        { transform: `translate(0px, 0px)` }
-                    ], { duration: 200, easing: 'ease-out' });
-
-                    playBeep(1000 + remainingSwipedCount * 100, 'sine', 0.05);
-                    remainingSwipedCount++;
-                    await sleep(200);
+                    const firstRect = coin.getBoundingClientRect(); onesTube.appendChild(coin); const lastRect = coin.getBoundingClientRect();
+                    coin.animate([{ transform: `translate(${firstRect.left - lastRect.left}px, ${firstRect.top - lastRect.top}px)` }, { transform: `translate(0px, 0px)` }], { duration: 250, easing: 'ease-out' });
+                    playBeep(1000 + remainingSwipedCount * 100, 'sine', 0.05); remainingSwipedCount++; await sleep(250);
                 }
-
-                if (onesHoverArea.children.length === 0) {
-                    gameState = STATE_INPUT_ANSWER;
-                    enableInput();
-                }
-                isAnimating = false;
-                updateGuidance();
+                if (addHoverArea.children.length === 0) { gameState = STATE_INPUT_ANSWER; enableInput(); }
+                isAnimating = false; updateGuidance();
             }
         }
 
         async function handleOnesTubeSwipe() {
             if (gameState !== STATE_EVOLVE_10) return;
             isAnimating = true; guideHand.style.display = 'none';
-
             const onesCoins = Array.from(onesTube.querySelectorAll('.coin'));
             onesCoins.forEach(c => c.classList.add('glow-merge'));
-            await sleep(700); 
-            onesTube.innerHTML = ""; 
+            await sleep(700); onesTube.innerHTML = ""; 
 
-            const dummyStart = createCoin(10); dummyStart.style.visibility = 'hidden'; onesTube.appendChild(dummyStart);
-            const startRect = dummyStart.getBoundingClientRect(); dummyStart.remove();
-            
-            const dummyTarget = createCoin(10); dummyTarget.style.visibility = 'hidden'; tensTube.appendChild(dummyTarget);
-            const targetRect = dummyTarget.getBoundingClientRect(); dummyTarget.remove();
+            const dummyStart = createCoin(10); dummyStart.style.visibility = 'hidden'; onesTube.appendChild(dummyStart); const startRect = dummyStart.getBoundingClientRect(); dummyStart.remove();
+            const dummyTarget = createCoin(10); dummyTarget.style.visibility = 'hidden'; tensTube.appendChild(dummyTarget); const targetRect = dummyTarget.getBoundingClientRect(); dummyTarget.remove();
 
-            const celebCoin = createCoin(10);
-            celebCoin.style.position = 'fixed'; celebCoin.style.left = '0px'; celebCoin.style.top = '0px'; celebCoin.style.zIndex = '1000';
-            document.body.appendChild(celebCoin);
-
-            playBeep(440, 'sine', 0.1); setTimeout(() => playBeep(554.37, 'sine', 0.1), 100);
-            setTimeout(() => playBeep(659.25, 'sine', 0.1), 200); setTimeout(() => playBeep(880, 'sine', 0.3), 300);
+            const celebCoin = createCoin(10); celebCoin.style.position = 'fixed'; celebCoin.style.left = '0px'; celebCoin.style.top = '0px'; celebCoin.style.zIndex = '1000'; document.body.appendChild(celebCoin);
+            playBeep(440, 'sine', 0.1); setTimeout(() => playBeep(554.37, 'sine', 0.1), 100); setTimeout(() => playBeep(659.25, 'sine', 0.1), 200); setTimeout(() => playBeep(880, 'sine', 0.3), 300);
 
             const evolveAnim = celebCoin.animate([
                 { transform: `translate(${startRect.left}px, ${startRect.top}px) scale(0.5) rotateY(0deg)`, opacity: 0 },
@@ -649,193 +523,111 @@
                 { transform: `translate(${targetRect.left}px, ${targetRect.top}px) scale(1) rotateY(1080deg)`, opacity: 1, boxShadow: '0 3px 5px rgba(0,0,0,0.2)' }
             ], { duration: 1500, easing: 'ease-in-out', fill: 'forwards' });
 
-            await evolveAnim.finished;
-            celebCoin.remove();
-            tensTube.appendChild(createCoin(10));
+            await evolveAnim.finished; celebCoin.remove(); tensTube.appendChild(createCoin(10));
 
             const remainingOnes = valY_ones - neededFor10;
             if (remainingOnes > 0) {
-                const spacers = onesHoverArea.querySelectorAll('.spacer');
-                spacers.forEach(s => s.remove());
-                const coinsToDrop = Array.from(onesHoverArea.children);
-                const firstRects = coinsToDrop.map(c => c.getBoundingClientRect());
-                onesHoverArea.style.flexDirection = 'column-reverse';
-                const lastRects = coinsToDrop.map(c => c.getBoundingClientRect());
-
-                coinsToDrop.forEach((coin, i) => {
-                    coin.animate([
-                        { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
-                        { transform: 'translate(0px, 0px)' }
-                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
-                });
-                setTimeout(() => playBeep(200, 'square', 0.1), 350);
-                await sleep(400);
+                const spacers = addHoverArea.querySelectorAll('.spacer'); spacers.forEach(s => s.remove());
+                const coinsToDrop = Array.from(addHoverArea.children); const firstRects = coinsToDrop.map(c => c.getBoundingClientRect());
+                addHoverArea.style.flexDirection = 'column-reverse'; const lastRects = coinsToDrop.map(c => c.getBoundingClientRect());
+                coinsToDrop.forEach((coin, i) => { coin.animate([{ transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` }, { transform: 'translate(0px, 0px)' }], { duration: 400, easing: 'ease-in', fill: 'forwards' }); });
+                setTimeout(() => playBeep(200, 'square', 0.1), 350); await sleep(400);
             }
-
             gameState = (remainingOnes > 0) ? STATE_MOVE_REMAINING : STATE_INPUT_ANSWER;
             if (gameState === STATE_INPUT_ANSWER) enableInput();
-            
-            isAnimating = false;
-            updateGuidance();
+            isAnimating = false; updateGuidance();
         }
 
         async function handleBorrow10() {
             if (gameState !== STATE_BORROW_10 || isAnimating) return;
             isAnimating = true; guideHand.style.display = 'none';
 
-            const borrowCoin = tensTube.lastElementChild;
-            if (!borrowCoin) { isAnimating = false; return; }
-
-            const startRect = borrowCoin.getBoundingClientRect();
-            borrowCoin.style.visibility = 'hidden';
-
-            const dummyOnes = createCoin(1); dummyOnes.style.visibility = 'hidden'; onesHoverArea.appendChild(dummyOnes);
+            const borrowCoin = tensTube.lastElementChild; if (!borrowCoin) { isAnimating = false; return; }
+            const startRect = borrowCoin.getBoundingClientRect(); borrowCoin.style.visibility = 'hidden';
+            
+            const dummyOnes = createCoin(1); dummyOnes.style.visibility = 'hidden'; subtractHoverArea.appendChild(dummyOnes);
             const targetRect = dummyOnes.getBoundingClientRect(); dummyOnes.remove();
 
-            const animCoin = createCoin(10);
-            animCoin.style.position = 'fixed'; animCoin.style.left = `${startRect.left}px`; animCoin.style.top = `${startRect.top}px`; animCoin.style.zIndex = '1000';
-            document.body.appendChild(animCoin);
-
+            const animCoin = createCoin(10); animCoin.style.position = 'fixed'; animCoin.style.left = `${startRect.left}px`; animCoin.style.top = `${startRect.top}px`; animCoin.style.zIndex = '1000'; document.body.appendChild(animCoin);
             playBeep(600, 'sine', 0.1);
 
-            const moveAnim = animCoin.animate([
-                { transform: 'translate(0, 0) scale(1)' },
-                { transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(1.2)` }
-            ], { duration: 400, easing: 'ease-out', fill: 'forwards' });
-
+            const moveAnim = animCoin.animate([{ transform: 'translate(0, 0) scale(1)' }, { transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(1.2)` }], { duration: 400, easing: 'ease-out', fill: 'forwards' });
             await moveAnim.finished;
 
-            animCoin.classList.add('charge-shake');
-            playBeep(300, 'sawtooth', 0.4);
-            await sleep(500);
-            animCoin.classList.remove('charge-shake');
+            animCoin.classList.add('charge-shake'); playBeep(300, 'sawtooth', 0.4); await sleep(500); animCoin.classList.remove('charge-shake');
+            const popAnim = animCoin.animate([{ transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(1.2)`, opacity: 1 }, { transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(1.7)`, opacity: 1, offset: 0.5 }, { transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(0)`, opacity: 0 }], { duration: 300, easing: 'ease-in-out' });
+            playBeep(800, 'square', 0.15); await popAnim.finished; animCoin.remove(); borrowCoin.remove();
 
-            const popAnim = animCoin.animate([
-                { transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(1.2)`, opacity: 1 },
-                { transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(1.7)`, opacity: 1, offset: 0.5 },
-                { transform: `translate(${targetRect.left - startRect.left}px, ${targetRect.top - startRect.top}px) scale(0)`, opacity: 0 }
-            ], { duration: 300, easing: 'ease-in-out' });
-
-            playBeep(800, 'square', 0.15);
-            await popAnim.finished;
-            animCoin.remove();
-            borrowCoin.remove();
-
-            gameState = STATE_DECOMPOSE_10;
-            onesHoverArea.style.flexDirection = 'column'; 
-            
-            equationBox.classList.add('eq-active-subtraction');
-            eqY.classList.add('eq-highlight-y');
-
+            gameState = STATE_DECOMPOSE_10; subtractHoverArea.style.flexDirection = 'column'; 
+            eqY.classList.add('eq-active-subtraction');
             ghostTargetArea.innerHTML = "";
             for (let i = 0; i < valY; i++) {
-                const ghost = document.createElement('div');
-                ghost.className = 'coin-ghost';
-                ghost.textContent = "−";
-                ghostTargetArea.appendChild(ghost);
+                const ghost = document.createElement('div'); ghost.className = 'coin-ghost'; ghost.textContent = "−"; ghostTargetArea.appendChild(ghost);
             }
 
             for (let i = 0; i < 10; i++) {
-                const newCoin = createCoin(1);
-                onesHoverArea.appendChild(newCoin);
-                const finalRect = newCoin.getBoundingClientRect();
-
-                newCoin.animate([
-                    { transform: `translate(${targetRect.left - finalRect.left + (Math.random() * 40 - 20)}px, ${targetRect.top - finalRect.top - 30}px) scale(0.5)`, opacity: 0 },
-                    { transform: 'translate(0, 0) scale(1)', opacity: 1 }
-                ], { duration: 350 + i * 20, easing: 'ease-out' });
-
-                playBeep(1100 + i * 40, 'sine', 0.03);
-                await sleep(40);
+                const newCoin = createCoin(1); subtractHoverArea.appendChild(newCoin); const finalRect = newCoin.getBoundingClientRect();
+                newCoin.animate([{ transform: `translate(${targetRect.left - finalRect.left + (Math.random() * 40 - 20)}px, ${targetRect.top - finalRect.top - 30}px) scale(0.5)`, opacity: 0 }, { transform: 'translate(0, 0) scale(1)', opacity: 1 }], { duration: 350 + i * 20, easing: 'ease-out' });
+                playBeep(1100 + i * 40, 'sine', 0.03); await sleep(40);
             }
             await sleep(300);
-
-            gameState = STATE_SUBTRACT_ONES;
-            isAnimating = false;
-            updateGuidance();
+            gameState = STATE_SUBTRACT_ONES; isAnimating = false; updateGuidance();
         }
 
-        async function handleOnesHoverFlick() {
+        async function handleSubHoverFlick() {
             if (gameState !== STATE_SUBTRACT_ONES || isAnimating) return;
-            const coin = onesHoverArea.lastElementChild;
-            const ghost = ghostTargetArea.children[subtractedCount]; 
+            const coin = subtractHoverArea.lastElementChild; const ghost = ghostTargetArea.children[subtractedCount]; 
             if (!coin || !ghost) return;
 
             isAnimating = true; guideHand.style.display = 'none';
-
-            coin.classList.add('flick-out-to-target');
             playBeep(500, 'sawtooth', 0.08);
 
-            ghost.style.transform = 'scale(0)';
-            ghost.style.opacity = '0';
+            const coinRect = coin.getBoundingClientRect(); const ghostRect = ghost.getBoundingClientRect();
+            const distX = ghostRect.left - coinRect.left; const distY = ghostRect.top - coinRect.top;
 
-            await sleep(250);
-            coin.remove();
+            const flyAnim = coin.animate([
+                { transform: `translate(0px, 0px) scale(1) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${distX * 0.5}px, ${distY * 0.5 - 20}px) scale(1.1) rotate(15deg)`, opacity: 0.8 },
+                { transform: `translate(${distX}px, ${distY}px) scale(0) rotate(45deg)`, opacity: 0 }
+            ], { duration: 300, easing: 'ease-in', fill: 'forwards' });
 
-            subtractedCount++;
+            ghost.style.transform = 'scale(0)'; ghost.style.opacity = '0';
+            await flyAnim.finished; coin.remove(); subtractedCount++;
 
             if (subtractedCount === valY) {
-                ghostTargetArea.innerHTML = "";
-                equationBox.classList.remove('eq-active-subtraction');
-                eqY.classList.remove('eq-highlight-y');
-                
+                ghostTargetArea.innerHTML = ""; eqY.classList.remove('eq-active-subtraction');
                 await dropRemainingCoins();
             } else {
-                isAnimating = false;
-                updateGuidance();
+                isAnimating = false; updateGuidance();
             }
         }
 
         async function dropRemainingCoins() {
-            const remainingCoins = Array.from(onesHoverArea.children);
-            
+            const remainingCoins = Array.from(subtractHoverArea.children);
             if (remainingCoins.length > 0) {
                 const firstRects = remainingCoins.map(c => c.getBoundingClientRect());
-                
                 remainingCoins.forEach(coin => onesTube.appendChild(coin));
                 const lastRects = remainingCoins.map(c => c.getBoundingClientRect());
-
-                remainingCoins.forEach((coin, i) => {
-                    coin.animate([
-                        { transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` },
-                        { transform: 'translate(0px, 0px)' }
-                    ], { duration: 400, easing: 'ease-in', fill: 'forwards' });
-                });
-                
-                setTimeout(() => playBeep(200, 'square', 0.1), 350);
-                await sleep(400);
+                remainingCoins.forEach((coin, i) => { coin.animate([{ transform: `translate(${firstRects[i].left - lastRects[i].left}px, ${firstRects[i].top - lastRects[i].top}px)` }, { transform: 'translate(0px, 0px)' }], { duration: 400, easing: 'ease-in', fill: 'forwards' }); });
+                setTimeout(() => playBeep(200, 'square', 0.1), 350); await sleep(400);
             }
-
-            gameState = STATE_INPUT_ANSWER;
-            enableInput();
-            isAnimating = false;
-            updateGuidance();
+            gameState = STATE_INPUT_ANSWER; enableInput(); isAnimating = false; updateGuidance();
         }
 
         function enableInput() {
-            numpad.classList.remove('numpad-disabled');
-            playBeep(1000, 'sine', 0.1); setTimeout(() => playBeep(1500, 'sine', 0.15), 100); 
-
-            // 💡 コインがある部分だけをぴったり囲むハイライト枠を生成
-            addHighlightBox(onesTube);
-            addHighlightBox(tensTube);
+            numpad.classList.remove('numpad-disabled'); playBeep(1000, 'sine', 0.1); setTimeout(() => playBeep(1500, 'sine', 0.15), 100); 
+            addHighlightBox(onesTube); addHighlightBox(tensTube);
         }
 
         function addHighlightBox(tube) {
             const coinCount = tube.querySelectorAll('.coin:not(.spacer)').length;
             if (coinCount > 0) {
-                const box = document.createElement('div');
-                box.className = 'answer-highlight-box';
-                // コインの枚数×1マス分の高さ
-                box.style.height = `calc(var(--slot-size) * ${coinCount})`;
-                tube.appendChild(box);
+                const box = document.createElement('div'); box.className = 'answer-highlight-box';
+                box.style.height = `calc(var(--slot-size) * ${coinCount})`; tube.appendChild(box);
             }
         }
 
-        function clearAnswerHighlights() {
-            document.querySelectorAll('.answer-highlight-box').forEach(el => el.remove());
-        }
-
+        function clearAnswerHighlights() { document.querySelectorAll('.answer-highlight-box').forEach(el => el.remove()); }
         function resetInput() { currentInput = ""; eqAns.textContent = ""; cursor.style.display = "inline-block"; }
 
         function handleInput(num, btnElement) {
@@ -844,70 +636,39 @@
             if (currentInput.length === expectedAnswer.toString().length) {
                 cursor.style.display = "none";
                 if (parseInt(currentInput) === expectedAnswer) showFinalReward();
-                else {
-                    playBeep(150, 'sawtooth', 0.3); btnElement.classList.add('shake');
-                    setTimeout(() => { btnElement.classList.remove('shake'); resetInput(); }, 400);
-                }
+                else { playBeep(150, 'sawtooth', 0.3); btnElement.classList.add('shake'); setTimeout(() => { btnElement.classList.remove('shake'); resetInput(); }, 400); }
             }
         }
 
         function spawnStars(cx, cy) {
             for(let i=0; i<15; i++) {
-                const star = document.createElement('div'); star.textContent = '✨';
-                star.style.position = 'fixed'; star.style.left = `${cx}px`; star.style.top = `${cy}px`;
-                star.style.fontSize = '40px'; star.style.zIndex = '1010'; star.style.pointerEvents = 'none';
-                star.style.transform = 'translate(-50%, -50%)'; document.body.appendChild(star);
+                const star = document.createElement('div'); star.textContent = '✨'; star.style.position = 'fixed'; star.style.left = `${cx}px`; star.style.top = `${cy}px`;
+                star.style.fontSize = '40px'; star.style.zIndex = '1010'; star.style.pointerEvents = 'none'; star.style.transform = 'translate(-50%, -50%)'; document.body.appendChild(star);
                 const angle = (i / 15) * Math.PI * 2; const distance = 120 + Math.random() * 80;
                 const tx = Math.cos(angle) * distance; const ty = Math.sin(angle) * distance;
-                const anim = star.animate([
-                    { transform: `translate(-50%, -50%) scale(0) rotate(0deg)`, opacity: 1 },
-                    { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(1.5) rotate(180deg)`, opacity: 0 }
-                ], { duration: 1000 + Math.random()*500, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' });
+                const anim = star.animate([{ transform: `translate(-50%, -50%) scale(0) rotate(0deg)`, opacity: 1 }, { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(1.5) rotate(180deg)`, opacity: 0 }], { duration: 1000 + Math.random()*500, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' });
                 anim.onfinish = () => star.remove();
             }
         }
 
         async function showFinalReward() {
-            isAnimating = true;
-            overlay.style.opacity = "1";
-            clearAnswerHighlights();
-            
-            const rect = eqAns.getBoundingClientRect();
-            const popText = document.createElement('div');
-            popText.textContent = expectedAnswer;
-            popText.style.position = 'fixed'; popText.style.left = `${rect.left + rect.width / 2}px`; popText.style.top = `${rect.top + rect.height / 2}px`;
-            popText.style.transform = `translate(-50%, -50%) scale(1)`; popText.style.fontSize = window.getComputedStyle(eqAns).fontSize;
-            popText.style.fontWeight = 'bold'; popText.style.color = '#333'; popText.style.zIndex = '3000'; popText.style.pointerEvents = 'none';
+            isAnimating = true; overlay.style.opacity = "1"; clearAnswerHighlights();
+            const rect = eqAnsBox.getBoundingClientRect(); const popText = document.createElement('div');
+            popText.textContent = expectedAnswer; popText.style.position = 'fixed'; popText.style.left = `${rect.left + rect.width / 2}px`; popText.style.top = `${rect.top + rect.height / 2}px`;
+            popText.style.transform = `translate(-50%, -50%) scale(1)`; popText.style.fontSize = window.getComputedStyle(eqAnsBox).fontSize; popText.style.fontWeight = 'bold'; popText.style.color = '#333'; popText.style.zIndex = '3000'; popText.style.pointerEvents = 'none';
             document.body.appendChild(popText);
 
-            eqAns.style.opacity = '0';
-            const centerX = window.innerWidth / 2; const centerY = window.innerHeight / 2;
+            eqAnsBox.style.opacity = '0'; const centerX = window.innerWidth / 2; const centerY = window.innerHeight / 2;
+            const flyIn = popText.animate([{ left: `${rect.left + rect.width / 2}px`, top: `${rect.top + rect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333' }, { left: `${centerX}px`, top: `${centerY}px`, transform: `translate(-50%, -50%) scale(5)`, color: '#e60012', textShadow: '0 0 20px #ffeb3b, 0 0 40px #ff9800' }], { duration: 600, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards' });
 
-            const flyIn = popText.animate([
-                { left: `${rect.left + rect.width / 2}px`, top: `${rect.top + rect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333' },
-                { left: `${centerX}px`, top: `${centerY}px`, transform: `translate(-50%, -50%) scale(5)`, color: '#e60012', textShadow: '0 0 20px #ffeb3b, 0 0 40px #ff9800' }
-            ], { duration: 600, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards' });
-
-            playBeep(880, 'sine', 0.1); setTimeout(() => playBeep(1108.73, 'sine', 0.1), 100); setTimeout(() => playBeep(1318.51, 'sine', 0.3), 200);
-            await flyIn.finished;
-
+            playBeep(880, 'sine', 0.1); setTimeout(() => playBeep(1108.73, 'sine', 0.1), 100); setTimeout(() => playBeep(1318.51, 'sine', 0.3), 200); await flyIn.finished;
             spawnStars(centerX, centerY);
-            const pulse = popText.animate([
-                { transform: `translate(-50%, -50%) scale(5)` }, { transform: `translate(-50%, -50%) scale(5.5)` }, { transform: `translate(-50%, -50%) scale(5)` }
-            ], { duration: 500, iterations: 2, easing: 'ease-in-out' });
-            await pulse.finished; await sleep(300);
+            const pulse = popText.animate([{ transform: `translate(-50%, -50%) scale(5)` }, { transform: `translate(-50%, -50%) scale(5.5)` }, { transform: `translate(-50%, -50%) scale(5)` }], { duration: 500, iterations: 2, easing: 'ease-in-out' }); await pulse.finished; await sleep(300);
 
-            const newRect = eqAns.getBoundingClientRect(); 
-            playBeep(1318.51, 'sine', 0.1); setTimeout(() => playBeep(880, 'sine', 0.1), 100);
-
-            const flyOut = popText.animate([
-                { left: `${centerX}px`, top: `${centerY}px`, transform: `translate(-50%, -50%) scale(5)`, color: '#e60012', textShadow: '0 0 20px #ffeb3b, 0 0 40px #ff9800' },
-                { left: `${newRect.left + newRect.width / 2}px`, top: `${newRect.top + newRect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333', textShadow: 'none' }
-            ], { duration: 500, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
+            const newRect = eqAnsBox.getBoundingClientRect(); playBeep(1318.51, 'sine', 0.1); setTimeout(() => playBeep(880, 'sine', 0.1), 100);
+            const flyOut = popText.animate([{ left: `${centerX}px`, top: `${centerY}px`, transform: `translate(-50%, -50%) scale(5)`, color: '#e60012', textShadow: '0 0 20px #ffeb3b, 0 0 40px #ff9800' }, { left: `${newRect.left + newRect.width / 2}px`, top: `${newRect.top + newRect.height / 2}px`, transform: `translate(-50%, -50%) scale(1)`, color: '#333', textShadow: 'none' }], { duration: 500, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
             
-            await flyOut.finished; popText.remove(); eqAns.style.opacity = '1';
-            await sleep(500);
-            startNextRound();
+            await flyOut.finished; popText.remove(); eqAnsBox.style.opacity = '1'; await sleep(500); startNextRound();
         }
 
         window.onload = init;
