@@ -90,7 +90,6 @@
         .level-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #0056b3; }
         .level-btn.lvl2 { background-color: #28a745; box-shadow: 0 6px 0 #1e7e34; }
 
-        /* 数式表示エリアのスタイル（配置変更に伴いmarginを微調整） */
         #equation {
             font-size: clamp(24px, 7vw, 40px); font-weight: bold; color: #333;
             margin: 10px 0 15px 0; height: 50px; display: flex; align-items: center; justify-content: center;
@@ -136,6 +135,26 @@
             height: 4px; 
             background-color: #b0bec5; 
             z-index: 1; 
+        }
+
+        /* 💡 改善：コインがある部分だけをピッタリ囲む動的ハイライト枠 */
+        .answer-highlight-box {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border: 3px solid #ffca28; /* ゴールドの枠線 */
+            border-radius: 8px 8px 12px 12px;
+            box-sizing: border-box;
+            background-color: rgba(255, 202, 40, 0.15); /* 枠の内部もうっすら光らせる */
+            pointer-events: none;
+            z-index: 15;
+            animation: boxPulse 1.5s infinite;
+        }
+        @keyframes boxPulse {
+            0% { box-shadow: 0 0 5px rgba(255, 202, 40, 0.4), inset 0 0 5px rgba(255, 202, 40, 0.4); opacity: 0.7; }
+            50% { box-shadow: 0 0 20px rgba(255, 202, 40, 0.9), inset 0 0 10px rgba(255, 202, 40, 0.6); opacity: 1; }
+            100% { box-shadow: 0 0 5px rgba(255, 202, 40, 0.4), inset 0 0 5px rgba(255, 202, 40, 0.4); opacity: 0.7; }
         }
 
         .tube-scale {
@@ -257,12 +276,6 @@
             100% { transform: translate(50px, 0px) scale(0); opacity: 0; }
         }
 
-        .flick-out-left { animation: flickLeftAnim 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; }
-        @keyframes flickLeftAnim {
-            0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
-            100% { transform: translate(-250px, -50px) rotate(-180deg) scale(0.7); opacity: 0; }
-        }
-
         .shake { animation: mildShake 0.4s ease-in-out; background-color: #dc3545 !important; box-shadow: 0 4px 0 #a71d2a !important; }
         @keyframes mildShake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
 
@@ -290,7 +303,6 @@
 
     <div id="success-overlay"></div>
 
-    <!-- 💡 改善の核心：#equation の HTML内配置を #game-area の直後に移動 -->
     <div id="game-area">
         <div class="tube-container">
             <div class="tube-label">10の部屋</div>
@@ -388,6 +400,7 @@
             guideHand.style.display = 'none';
             equationBox.classList.remove('eq-active-subtraction');
             eqY.classList.remove('eq-highlight-y');
+            clearAnswerHighlights();
         }
 
         function startGame(level) {
@@ -402,6 +415,7 @@
             onesHoverArea.style.flexDirection = 'column'; tensHoverArea.style.flexDirection = 'column';
             equationBox.classList.remove('eq-active-subtraction');
             eqY.classList.remove('eq-highlight-y');
+            clearAnswerHighlights();
 
             if (currentLevel === 1) {
                 gameState = STATE_MAKE_10;
@@ -801,6 +815,25 @@
         function enableInput() {
             numpad.classList.remove('numpad-disabled');
             playBeep(1000, 'sine', 0.1); setTimeout(() => playBeep(1500, 'sine', 0.15), 100); 
+
+            // 💡 コインがある部分だけをぴったり囲むハイライト枠を生成
+            addHighlightBox(onesTube);
+            addHighlightBox(tensTube);
+        }
+
+        function addHighlightBox(tube) {
+            const coinCount = tube.querySelectorAll('.coin:not(.spacer)').length;
+            if (coinCount > 0) {
+                const box = document.createElement('div');
+                box.className = 'answer-highlight-box';
+                // コインの枚数×1マス分の高さ
+                box.style.height = `calc(var(--slot-size) * ${coinCount})`;
+                tube.appendChild(box);
+            }
+        }
+
+        function clearAnswerHighlights() {
+            document.querySelectorAll('.answer-highlight-box').forEach(el => el.remove());
         }
 
         function resetInput() { currentInput = ""; eqAns.textContent = ""; cursor.style.display = "inline-block"; }
@@ -837,6 +870,7 @@
         async function showFinalReward() {
             isAnimating = true;
             overlay.style.opacity = "1";
+            clearAnswerHighlights();
             
             const rect = eqAns.getBoundingClientRect();
             const popText = document.createElement('div');
