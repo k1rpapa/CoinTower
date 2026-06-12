@@ -90,28 +90,31 @@
         .level-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #0056b3; }
         .level-btn.lvl2 { background-color: #28a745; box-shadow: 0 6px 0 #1e7e34; }
 
-        /* 数式表示エリアの拡張 */
+        /* 数式表示エリアのスタイル（配置変更に伴いmarginを微調整） */
         #equation {
             font-size: clamp(24px, 7vw, 40px); font-weight: bold; color: #333;
-            margin: 5px 0 15px 0; height: 50px; display: flex; align-items: center; justify-content: center;
+            margin: 10px 0 15px 0; height: 50px; display: flex; align-items: center; justify-content: center;
             background: #fff; padding: 5px 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;
             transition: transform 0.3s, box-shadow 0.3s;
+            width: 100%; max-width: 320px; box-sizing: border-box;
         }
-        /* 減算アクション時に、今解いている「問い」を強く意識させるためのアクティブクラス */
+        @media (min-height: 950px) and (min-width: 700px) {
+            #equation { max-width: 450px; }
+        }
+        
         .eq-active-subtraction {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(220, 53, 69, 0.3) !important;
         }
         .eq-highlight-y {
             color: #dc3545;
-            font-size: 1.25s;
             transition: all 0.3s;
             display: inline-block;
         }
 
         #game-area {
             display: flex; justify-content: center; gap: var(--game-gap); 
-            margin-bottom: 15px; visibility: hidden; position: relative;
+            margin-bottom: 10px; visibility: hidden; position: relative;
         }
         .tube-container { display: flex; flex-direction: column; align-items: center; }
         .tube-label { font-size: 16px; font-weight: bold; color: #555; margin-bottom: 5px; }
@@ -166,7 +169,6 @@
             display: flex; flex-direction: column; align-items: center; z-index: 10;
         }
 
-        /* 減算ターゲット（ゴースト枠）のエリアをホバリングエリアの右側に絶対配置 */
         #ghost-target-area {
             position: absolute;
             top: 0;
@@ -189,7 +191,6 @@
         .coin-1 { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); border: 2px solid #9e9e9e; color: #424242; }
         .coin-10 { background: radial-gradient(circle at 30% 30%, #ffcc80, #d84315); border: 2px solid #8d6e63; color: #fff; }
 
-        /* 引く数を物理的な目標として意識させるためのゴースト枠のスタイル */
         .coin-ghost {
             width: var(--coin-size); height: var(--coin-size); border-radius: 50%;
             border: 2px dashed #dc3545; background-color: rgba(220, 53, 69, 0.05);
@@ -220,7 +221,6 @@
             100% { transform: translate(40px, 0) scale(1); opacity: 0; }
         }
         
-        /* ガイダンスの動きを「右側のゴースト枠へ投げ入れる」軌道に修正 */
         @keyframes flickAnimation {
             0% { transform: translate(0, 0) scale(1); opacity: 0; }
             20% { transform: translate(0, 0) scale(0.9); opacity: 1; }
@@ -250,7 +250,6 @@
             40%, 80% { transform: translateX(3px); }
         }
 
-        /* 弾き飛ばしアニメーションを、枠に吸い込まれて消える演出に変更 */
         .flick-out-to-target { animation: flickTargetAnim 0.25s ease-in forwards; pointer-events: none; }
         @keyframes flickTargetAnim {
             0% { transform: translate(0, 0) scale(1); opacity: 1; }
@@ -291,10 +290,7 @@
 
     <div id="success-overlay"></div>
 
-    <div id="equation">
-        <span id="eq-x"></span> <span id="eq-sign">+</span> <span id="eq-y"></span> = <span id="eq-ans"></span><span class="cursor" id="cursor"></span>
-    </div>
-
+    <!-- 💡 改善の核心：#equation の HTML内配置を #game-area の直後に移動 -->
     <div id="game-area">
         <div class="tube-container">
             <div class="tube-label">10の部屋</div>
@@ -316,11 +312,14 @@
                 </div>
                 <div id="ones-tube" class="tube swipeable"></div>
                 <div id="ones-hover-area" class="hover-area swipeable"></div>
-                <!-- 減算用の目標ゴースト枠コンテナを1の部屋のラッパー内に追加 -->
                 <div id="ghost-target-area"></div>
             </div>
         </div>
         <div id="guidance-hand">👈</div>
+    </div>
+
+    <div id="equation">
+        <span id="eq-x"></span> <span id="eq-sign">+</span> <span id="eq-y"></span> = <span id="eq-ans"></span><span class="cursor" id="cursor"></span>
     </div>
 
     <div id="numpad"></div>
@@ -477,7 +476,6 @@
             } else if (gameState === STATE_SUBTRACT_ONES) {
                 targetElement = onesHoverArea.lastElementChild;
                 isFlickGuidance = true;
-                /* ① フリック減算のガイダンスの指の向きを右向き(👉)にする */
                 guideHand.textContent = '👉';
                 isRightHandDirection = true;
             }
@@ -517,7 +515,6 @@
                 if ((gameState === STATE_MAKE_10 || gameState === STATE_MOVE_REMAINING) && diffX < -20) {
                     handleOnesHoverSwipe();
                 } else if (gameState === STATE_SUBTRACT_ONES) {
-                    // アイデアA進化：右（的の方向）へのスワイプで減算を実行
                     if (diffX > 20) handleOnesHoverFlick();
                 }
             });
@@ -713,7 +710,6 @@
             gameState = STATE_DECOMPOSE_10;
             onesHoverArea.style.flexDirection = 'column'; 
             
-            // 💡 改善の核心：数式を目立たせ、引く数の「ゴーストシルエット枠」を生成して目標を可視化
             equationBox.classList.add('eq-active-subtraction');
             eqY.classList.add('eq-highlight-y');
 
@@ -745,20 +741,17 @@
             updateGuidance();
         }
 
-        // 減算：アイデアA進化版（右側のゴースト目標枠へ吸い込ませるフリック処理）
         async function handleOnesHoverFlick() {
             if (gameState !== STATE_SUBTRACT_ONES || isAnimating) return;
             const coin = onesHoverArea.lastElementChild;
-            const ghost = ghostTargetArea.children[subtractedCount]; // 対応するゴースト枠
+            const ghost = ghostTargetArea.children[subtractedCount]; 
             if (!coin || !ghost) return;
 
             isAnimating = true; guideHand.style.display = 'none';
 
-            // 枠へ吸い込まれる専用アニメーションを適用
             coin.classList.add('flick-out-to-target');
             playBeep(500, 'sawtooth', 0.08);
 
-            // フリックされたらゴースト枠もリアクションして消える準備
             ghost.style.transform = 'scale(0)';
             ghost.style.opacity = '0';
 
@@ -768,9 +761,7 @@
             subtractedCount++;
 
             if (subtractedCount === valY) {
-                // すべてのゴースト枠を綺麗にクリア
                 ghostTargetArea.innerHTML = "";
-                // 数式の強調を解除
                 equationBox.classList.remove('eq-active-subtraction');
                 eqY.classList.remove('eq-highlight-y');
                 
